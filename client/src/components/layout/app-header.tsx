@@ -1,12 +1,13 @@
 import { Link, useLocation } from 'wouter';
 import { useAuth, getRoleLabel } from '@/lib/auth-context';
-import { LogOut, User, ChevronDown } from 'lucide-react';
+import { LogOut, User, ChevronDown, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import AwaedLogo from '@/components/awaed-logo';
 import ThemeToggle from '@/components/theme-toggle';
+import { useQuery } from '@tanstack/react-query';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function AppHeader() {
   const { user, logout, refreshUser } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [profileName, setProfileName] = useState('');
   const [profileEmail, setProfileEmail] = useState('');
@@ -83,6 +85,14 @@ export default function AppHeader() {
       setIsSaving(false);
     }
   };
+
+  const pendingQuery = useQuery<{ count: number }>({
+    queryKey: ['/api/admin/users/pending'],
+    enabled: user?.role === 'admin',
+    refetchInterval: 30000,
+  });
+
+  const pendingCount = pendingQuery.data?.count ?? 0;
 
   return (
     <motion.header
@@ -142,7 +152,28 @@ export default function AppHeader() {
           </Link>
 
           <div className="flex-1 flex justify-end">
-            <ThemeToggle />
+            <div className="flex items-center gap-3">
+              {user?.role === 'admin' && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative w-10 h-10 rounded-xl bg-surface border border-border hover:border-[#3B82F6]/30 transition-colors"
+                  onClick={() => setLocation('/admin/users')}
+                  data-testid="button-admin-notifications"
+                >
+                  <Bell className="w-5 h-5 text-muted-foreground" />
+                  {pendingCount > 0 && (
+                    <span
+                      className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full text-[11px] font-bold flex items-center justify-center text-white"
+                      style={{ backgroundColor: 'var(--accent)' }}
+                    >
+                      {pendingCount > 99 ? '99+' : pendingCount}
+                    </span>
+                  )}
+                </Button>
+              )}
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </div>

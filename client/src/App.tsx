@@ -8,6 +8,8 @@ import { AuthProvider } from "@/lib/auth-context";
 import { ThemeProvider } from "@/lib/theme-context";
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
+import Register from "@/pages/register";
+import PendingApproval from "@/pages/pending-approval";
 import Dashboard from "@/pages/dashboard";
 import BusinessAnalyzer from "@/pages/business-analyzer";
 import CampaignBrain from "@/pages/campaign-brain";
@@ -15,7 +17,8 @@ import ContentStudio from "@/pages/content-studio";
 import SmartAnalyzer from "@/pages/smart-analyzer";
 import CampaignPlanner from "@/pages/campaign-planner";
 import PerformanceAnalyzer from "@/pages/performance-analyzer";
-import AdminUsers from "@/pages/admin-users";
+import AdminUsers from "@/pages/admin/users";
+import ProtectedAdminRoute from "@/lib/protected-admin-route";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -31,6 +34,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
+      <Route path="/pending-approval" component={PendingApproval} />
       <Route path="/" component={Dashboard} />
       <Route path="/business-analyzer" component={BusinessAnalyzer} />
       <Route path="/campaign-brain" component={CampaignBrain} />
@@ -38,7 +43,13 @@ function Router() {
       <Route path="/smart-analyzer" component={SmartAnalyzer} />
       <Route path="/campaign-planner" component={CampaignPlanner} />
       <Route path="/performance-analyzer" component={PerformanceAnalyzer} />
-      <Route path="/admin/users" component={AdminUsers} />
+      <Route path="/admin/users">
+        {() => (
+          <ProtectedAdminRoute>
+            <AdminUsers />
+          </ProtectedAdminRoute>
+        )}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );

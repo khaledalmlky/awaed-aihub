@@ -9,8 +9,11 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   name: text("name").notNull(),
-  role: text("role").notNull().default("team"),
-  status: text("status").notNull().default("active"),
+  phone: text("phone").notNull().default(""),
+  // role: admin | member (member هو الافتراضي دائماً)
+  role: text("role").notNull().default("member"),
+  // status: approved | pending | rejected (approved للحسابات الحالية)
+  status: text("status").notNull().default("approved"),
   allowedTools: text("allowed_tools").array().notNull().default(sql`'{}'::text[]`),
   lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -26,17 +29,24 @@ export const insertUserSchema = createInsertSchema(users).omit({
 export const createUserSchema = z.object({
   email: z.string().email("البريد الإلكتروني غير صالح"),
   username: z.string().min(3, "اسم المستخدم يجب أن يكون 3 أحرف على الأقل"),
-  password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
+  password: z.string().min(8, "كلمة المرور يجب أن تكون 8 أحرف على الأقل"),
   name: z.string().min(2, "الاسم يجب أن يكون حرفين على الأقل"),
-  role: z.enum(["admin", "team"]).default("team"),
+  phone: z
+    .string()
+    .default("")
+    .refine(
+      (v) => v === "" || /^\d{10,15}$/.test(v),
+      "رقم الجوال غير صالح"
+    ),
+  role: z.enum(["admin", "member"]).default("member"),
   allowedTools: z.array(z.string()).default([]),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type CreateUser = z.infer<typeof createUserSchema>;
 export type User = typeof users.$inferSelect;
-export type UserRole = "admin" | "team";
-export type UserStatus = "active" | "inactive";
+export type UserRole = "admin" | "member" | "team";
+export type UserStatus = "approved" | "pending" | "rejected" | "active" | "inactive";
 
 export const ALL_TOOLS = [
   "business_analyzer",
