@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
+import { AlertCircle, Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ThemeToggle from '@/components/theme-toggle';
 import AwaedLogo from '@/components/awaed-logo';
@@ -14,6 +14,7 @@ import AwaedLogo from '@/components/awaed-logo';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
@@ -25,11 +26,29 @@ export default function Login() {
     setError('');
     setIsLoading(true);
     
-    const success = await login(email, password);
-    if (success) {
+    const result = await login(email, password);
+    if (result.success) {
       setLocation('/');
     } else {
-      setError('بيانات الدخول غير صحيحة');
+      if (!result.error) {
+        setError('بيانات الدخول غير صحيحة، حاول مرة أخرى');
+        setIsLoading(false);
+        return;
+      }
+
+      const message = result.error || 'بيانات الدخول غير صحيحة';
+      if (message.includes('غير صحيحة')) {
+        setError(message);
+      } else if (message.includes('خطأ في الاتصال')) {
+        setError('تعذر الاتصال بالخادم، تأكد من اتصالك بالإنترنت');
+      } else {
+        const lower = message.toLowerCase();
+        if (lower.includes('fetch') || lower.includes('network')) {
+          setError('تعذر الاتصال بالخادم، تأكد من اتصالك بالإنترنت');
+        } else {
+          setError(message);
+        }
+      }
     }
     setIsLoading(false);
   };
@@ -107,16 +126,30 @@ export default function Login() {
                 <Label htmlFor="password" className="text-foreground/80 text-sm font-medium">
                   كلمة المرور
                 </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="bg-surface border-border text-foreground placeholder:text-muted-foreground/60 focus:border-[#3B82F6] focus:ring-[#3B82F6]/20 h-12 rounded-xl transition-all"
-                  data-testid="input-password"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="bg-surface border-border text-foreground placeholder:text-muted-foreground/60 focus:border-[#3B82F6] focus:ring-[#3B82F6]/20 h-12 rounded-xl transition-all pl-10"
+                    data-testid="input-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <Button 
