@@ -176,6 +176,16 @@ export default function Login() {
                 )}
               </Button>
 
+              <div className="text-center">
+                <Link
+                  href="/forgot-password"
+                  className="text-[#3B82F6] font-semibold hover:opacity-90 transition-opacity text-sm"
+                  data-testid="link-forgot-password"
+                >
+                  نسيت كلمة المرور؟
+                </Link>
+              </div>
+
               <p className="text-center text-muted-foreground text-sm">
                 ليس لديك حساب؟{" "}
                 <Link

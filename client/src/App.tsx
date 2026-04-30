@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/lib/theme-context";
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import ForgotPassword from "@/pages/forgot-password";
 import PendingApproval from "@/pages/pending-approval";
 import Dashboard from "@/pages/dashboard";
 import BusinessAnalyzer from "@/pages/business-analyzer";
@@ -35,6 +36,7 @@ function Router() {
     <Switch>
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/pending-approval" component={PendingApproval} />
       <Route path="/" component={Dashboard} />
       <Route path="/business-analyzer" component={BusinessAnalyzer} />

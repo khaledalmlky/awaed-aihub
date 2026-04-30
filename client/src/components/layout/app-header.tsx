@@ -94,6 +94,15 @@ export default function AppHeader() {
 
   const pendingCount = pendingQuery.data?.count ?? 0;
 
+  const resetRequestsQuery = useQuery<{ count: number }>({
+    queryKey: ['/api/admin/reset-requests'],
+    enabled: user?.role === 'admin',
+    refetchInterval: 30000,
+  });
+
+  const resetRequestsCount = resetRequestsQuery.data?.count ?? 0;
+  const notificationsCount = pendingCount + resetRequestsCount;
+
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
@@ -162,12 +171,12 @@ export default function AppHeader() {
                   data-testid="button-admin-notifications"
                 >
                   <Bell className="w-5 h-5 text-muted-foreground" />
-                  {pendingCount > 0 && (
+                  {notificationsCount > 0 && (
                     <span
                       className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full text-[11px] font-bold flex items-center justify-center text-white"
                       style={{ backgroundColor: 'var(--accent)' }}
                     >
-                      {pendingCount > 99 ? '99+' : pendingCount}
+                      {notificationsCount > 99 ? '99+' : notificationsCount}
                     </span>
                   )}
                 </Button>

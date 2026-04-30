@@ -20,10 +20,26 @@ export const users = pgTable("users", {
   createdBy: text("created_by"),
 });
 
+export const passwordResetRequests = pgTable("password_reset_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull(),
+  // status: pending | completed | rejected
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   lastLoginAt: true,
   createdAt: true,
+});
+
+export const insertPasswordResetRequestSchema = createInsertSchema(passwordResetRequests).omit({
+  id: true,
+  status: true,
+  createdAt: true,
+  completedAt: true,
 });
 
 export const createUserSchema = z.object({
@@ -45,6 +61,8 @@ export const createUserSchema = z.object({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type CreateUser = z.infer<typeof createUserSchema>;
 export type User = typeof users.$inferSelect;
+export type PasswordResetRequest = typeof passwordResetRequests.$inferSelect;
+export type InsertPasswordResetRequest = z.infer<typeof insertPasswordResetRequestSchema>;
 export type UserRole = "admin" | "member" | "team";
 export type UserStatus = "approved" | "pending" | "rejected" | "active" | "inactive";
 

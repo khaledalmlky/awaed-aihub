@@ -164,6 +164,25 @@ export function requireToolAccess(toolId: ToolId) {
 }
 
 export function registerAuthRoutes(app: Express): void {
+  app.post("/api/forgot-password", async (req: Request, res: Response) => {
+    const schema = z.object({
+      email: z.string().email("البريد الإلكتروني غير صالح"),
+    });
+
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.errors[0].message });
+    }
+
+    try {
+      await storage.createPasswordResetRequest(parsed.data.email);
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("[Auth] Forgot password error:", error);
+      return res.status(500).json({ error: "حدث خطأ أثناء إرسال الطلب" });
+    }
+  });
+
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     const registerSchema = z.object({
       name: z.string().min(2, "الاسم يجب أن يكون حرفين على الأقل"),
@@ -651,5 +670,56 @@ export function registerAuthRoutes(app: Express): void {
 
   app.get("/api/admin/tools", requireAdmin, (req: Request, res: Response) => {
     res.json({ tools: ALL_TOOLS });
+  });
+
+  app.get("/api/admin/reset-requests", requireAdmin, async (_req: Request, res: Response) => {
+    try {
+      const requests = await storage.getPendingPasswordResetRequests();
+      res.json({ requests, count: requests.length });
+    } catch (error) {
+      res.status(500).json({ error: "فشل في جلب طلبات استرجاع كلمة المرور" });
+    }
+  });
+
+  app.post("/api/admin/reset-password", requireAdmin, async (req: Request, res: Response) => {
+    const schema = z.object({
+      userId: z.string().min(1, "المستخدم غير صالح"),
+      newPassword: z.string().min(8, "كلمة المرور يجب أن تكون 8 أحرف على الأقل"),
+    });
+
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.errors[0].message });
+    }
+
+    try {
+      const { userId, newPassword } = parsed.data;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "المستخدم غير موجود" });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      await storage.updateUser(userId, { password: hashedPassword });
+      await storage.completePasswordResetRequestsByEmail(user.email);
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("[Admin] Reset password error:", error);
+      res.status(500).json({ error: "فشل في تغيير كلمة المرور" });
+    }
+  });
+
+  app.post("/api/admin/reject-reset/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const updated = await storage.rejectPasswordResetRequest(id);
+      if (!updated) {
+        return res.status(404).json({ error: "الطلب غير موجود" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "فشل في رفض الطلب" });
+    }
   });
 }
