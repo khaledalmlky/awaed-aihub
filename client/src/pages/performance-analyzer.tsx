@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import AppLayout from '@/components/layout/app-layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,12 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AnalysisLoading } from '@/components/ui/analysis-loading';
 import { AnalysisActions } from '@/components/ui/analysis-actions';
+import { ExecutiveSummary, ReportStatGrid, ToolModeTabs } from '@/components/ai/tool-report-widgets';
 import {
   BarChart3,
   Plus,
   Trash2,
   TrendingUp,
-  TrendingDown,
   DollarSign,
   Target,
   MousePointer,
@@ -89,7 +89,7 @@ const getRatingIcon = (rating: string) => {
 };
 
 export default function PerformanceAnalyzer() {
-  const { user } = useAuth();
+  const [analysisMode, setAnalysisMode] = useState<'quick' | 'detailed'>('quick');
   const [platforms, setPlatforms] = useState<PlatformBlock[]>([]);
   const [campaignGoal, setCampaignGoal] = useState('');
   const [industryType, setIndustryType] = useState('');
@@ -262,8 +262,8 @@ ${result.crossPlatformSummary}
 
     return (
       <AppLayout>
-        <div className="space-y-8 max-w-5xl mx-auto">
-          <div className="flex items-center justify-between">
+        <div className="space-y-8 max-w-5xl mx-auto text-right" dir="rtl">
+          <div className="flex flex-row-reverse items-center justify-between">
             <div>
               <h1 className="text-3xl lg:text-4xl font-bold">تحليل أداء الحملات</h1>
               <p className="text-muted-foreground mt-2 text-lg">
@@ -274,29 +274,29 @@ ${result.crossPlatformSummary}
               تحليل جديد
             </Button>
           </div>
-
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
           >
-            <Card className="bg-card/50 border-border/30">
+            <Card className="bg-card/50 border-border/30" dir="rtl">
               <CardHeader className="border-b border-border/30 pb-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    {getRatingIcon(result.overallRating)}
-                    <div>
-                      <CardTitle className="text-2xl">التقييم العام</CardTitle>
-                      <Badge className={`mt-2 ${getRatingColor(result.overallRating)} text-base px-4 py-1`}>
-                        {result.overallRating}
-                      </Badge>
-                    </div>
-                  </div>
-                  <AnalysisActions 
-                    data={result}
-                    title="تحليل أداء الحملات"
-                  />
-                </div>
+                <ExecutiveSummary
+                  icon={BarChart3}
+                  title="ملخص أداء الحملات"
+                  summary={result.crossPlatformSummary || result.recommendation || 'يوجد تحليل شامل لأداء المنصات ومؤشرات الإنفاق.'}
+                  badge={result.overallRating}
+                >
+                  <AnalysisActions data={result} title="تحليل أداء الحملات" />
+                </ExecutiveSummary>
+                <ReportStatGrid
+                  items={[
+                    { icon: DollarSign, label: 'إجمالي الإنفاق', value: `${result.platformsWithKPIs.reduce((sum, p) => sum + (Number(p.metrics.spend) || 0), 0).toLocaleString('ar-SA')} ريال`, tone: 'blue' },
+                    { icon: TrendingUp, label: 'أفضل ROAS', value: `${Math.max(...result.platformsWithKPIs.map((p) => p.kpis.ROAS || 0)).toFixed(2)}x`, tone: 'green' },
+                    { icon: Target, label: 'المنصات', value: result.platformsWithKPIs.length, tone: 'purple' },
+                    { icon: MousePointer, label: 'أفضل CTR', value: `${Math.max(...result.platformsWithKPIs.map((p) => p.kpis.CTR || 0)).toFixed(2)}%`, tone: 'amber' },
+                  ]}
+                />
               </CardHeader>
               <CardContent className="pt-6 space-y-6">
                 <div>
@@ -313,7 +313,7 @@ ${result.crossPlatformSummary}
                         transition={{ delay: idx * 0.1 }}
                         className="p-6 bg-card/30 rounded-xl border border-border/30"
                       >
-                        <h4 className="text-xl font-bold mb-4 text-accent">{platform.label}</h4>
+                        <h4 className="text-xl font-bold mb-4 text-accent text-right">{platform.label}</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                           <div className="col-span-full p-4 bg-accent/5 rounded-lg border border-accent/20">
                             <span className="text-sm text-muted-foreground">إجمالي الإنفاق</span>
@@ -411,15 +411,16 @@ ${result.crossPlatformSummary}
 
   return (
     <AppLayout>
-      <div className="space-y-8 max-w-4xl mx-auto">
+      <div className="space-y-8 max-w-4xl mx-auto text-right" dir="rtl">
         <div>
           <h1 className="text-3xl lg:text-4xl font-bold">تحليل أداء الحملات</h1>
           <p className="text-muted-foreground mt-3 text-lg">
             حلل أداء حملاتك عبر منصات متعددة واحصل على توصيات مدعومة بالبيانات
           </p>
         </div>
+        <ToolModeTabs value={analysisMode} onValueChange={setAnalysisMode} />
 
-        <Card className="bg-card/50 border-border/30">
+        <Card className="bg-card/50 border-border/30" dir="rtl">
           <CardHeader>
             <CardTitle>معلومات الحملة (اختياري)</CardTitle>
             <CardDescription>ساعدنا على فهم سياق حملتك للحصول على تحليل أفضل</CardDescription>

@@ -1,28 +1,34 @@
 import { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/app-layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Lightbulb, Sparkles, AlertTriangle, Target, MessageSquare, Zap, FileText, Loader2, AlertCircle, ArrowLeft, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
+import { Lightbulb, Sparkles, AlertTriangle, Target, MessageSquare, Zap, FileText, Loader2, AlertCircle, ArrowLeft, CheckCircle2, XCircle, Trash2, DollarSign, TrendingUp, Users } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/lib/auth-context';
 import { Link } from 'wouter';
 import { AnalysisLoading } from '@/components/ui/analysis-loading';
 import { AnalysisActions } from '@/components/ui/analysis-actions';
+import { ExecutiveSummary, IconList, NextStepsTimeline, ReportStatGrid, ToolModeTabs } from '@/components/ai/tool-report-widgets';
 
 interface CampaignIdea {
+  title?: string;
   idea: string;
   hook: string;
   angle: string;
+  targetAudience?: string;
   cta: string;
   platform?: string;
   budget?: string;
+  duration?: string;
   expectedROAS?: string;
+  expectedReach?: string;
+  kpi?: string;
   contentType?: string;
   warnings?: string[];
 }
@@ -47,6 +53,9 @@ interface BrainResponse {
   readyForCampaign: boolean;
   message: string;
   ideas: CampaignIdea[];
+  totalBudget?: string;
+  recommendation?: string;
+  nextSteps?: string[];
   prerequisiteActions?: string[];
   confidenceLevel?: 'low' | 'medium';
   confidenceReason?: string;
@@ -76,11 +85,11 @@ const formatAnalysisLabel = (analysis: Analysis): string => {
   return `${name} — ${score}/100 — ${date}`;
 };
 
-type Mode = 'select' | 'full' | 'custom';
+type Mode = 'full' | 'custom';
 
 export default function CampaignBrain() {
-  const { user } = useAuth();
-  const [mode, setMode] = useState<Mode>('select');
+  useAuth();
+  const [mode, setMode] = useState<Mode>('custom');
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<number | null>(null);
   const [clientContext, setClientContext] = useState<ClientContext | null>(null);
@@ -178,7 +187,7 @@ export default function CampaignBrain() {
           setClientContext(null);
         }
         if (newAnalyses.length === 0) {
-          setMode('select');
+          setMode('custom');
           setResult(null);
           setError(null);
         }
@@ -357,125 +366,10 @@ export default function CampaignBrain() {
     }
   };
 
-  if (mode === 'select') {
-    return (
-      <AppLayout>
-        <div className="space-y-10 lg:space-y-14">
-          <div className="flex items-center gap-5">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-xl">
-              <Lightbulb className="w-8 h-8 text-white" strokeWidth={1.5} />
-            </div>
-            <div>
-              <h1 className="text-3xl lg:text-4xl font-bold">مُلهم الحملات</h1>
-              <p className="text-muted-foreground text-lg mt-2">اختر طريقة توليد أفكار الحملات</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
-            <Card 
-              className="glass border-2 border-emerald-500/30 cursor-pointer hover:border-emerald-500/50 transition-all hover:shadow-xl"
-              onClick={() => {
-                if (analyses.length > 0) {
-                  setMode('full');
-                  setCustomContext(null);
-                  setResult(null);
-                } else {
-                  setError('لا يوجد تحليلات سابقة. يرجى تحليل موقع أولاً في محلل الأعمال.');
-                }
-              }}
-            >
-              <CardHeader className="text-center pb-2">
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-500/20 flex items-center justify-center mb-4">
-                  <Target className="w-8 h-8 text-emerald-500" />
-                </div>
-                <CardTitle className="text-xl">تحليل كامل</CardTitle>
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 mx-auto">موصى به</Badge>
-              </CardHeader>
-              <CardContent className="text-center space-y-3">
-                <p className="text-muted-foreground">
-                  أفكار دقيقة مبنية على تحليل شامل لموقع العميل
-                </p>
-                <ul className="text-sm text-right space-y-1">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    <span>دقة عالية مبنية على بيانات حقيقية</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    <span>توصيات مخصصة لنوع النشاط</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    <span>ميزانيات واقعية</span>
-                  </li>
-                </ul>
-                {analyses.length === 0 && (
-                  <p className="text-xs text-amber-500">يتطلب تحليل موقع مسبق</p>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card 
-              className="glass border-2 border-border/30 cursor-pointer hover:border-accent/30 transition-all hover:shadow-xl"
-              onClick={() => { setMode('custom'); setClientContext(null); setResult(null); }}
-            >
-              <CardHeader className="text-center pb-2">
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-500/20 flex items-center justify-center mb-4">
-                  <FileText className="w-8 h-8 text-amber-500" />
-                </div>
-                <CardTitle className="text-xl">معطيات اختيارية</CardTitle>
-                <Badge variant="outline" className="mx-auto">بدون تحليل</Badge>
-              </CardHeader>
-              <CardContent className="text-center space-y-3">
-                <p className="text-muted-foreground">
-                  أفكار مبنية على معلومات تدخلها يدوياً
-                </p>
-                <ul className="text-sm text-right space-y-1">
-                  <li className="flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-500" />
-                    <span>دقة تعتمد على المعطيات المدخلة</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    <span>سريع بدون الحاجة لتحليل</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    <span>مناسب للعملاء الجدد</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex items-center gap-3 max-w-4xl">
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-              <p className="text-red-400">{error}</p>
-              <Link href="/business-analyzer" className="mr-auto">
-                <Button size="sm" variant="outline" className="border-red-500/30 text-red-400 hover:bg-red-500/10">
-                  انتقل لمحلل الأعمال
-                </Button>
-              </Link>
-            </div>
-          )}
-        </div>
-      </AppLayout>
-    );
-  }
-
   return (
     <AppLayout>
-      <div className="space-y-10 lg:space-y-14">
-        <div className="flex items-center gap-5">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => { setMode('select'); setResult(null); setError(null); }}
-            className="rounded-full"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+      <div className="space-y-10 lg:space-y-14 text-right" dir="rtl">
+        <div className="flex flex-row-reverse items-center gap-5">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-xl">
             <Lightbulb className="w-8 h-8 text-white" strokeWidth={1.5} />
           </div>
@@ -486,9 +380,20 @@ export default function CampaignBrain() {
             </p>
           </div>
         </div>
+        <ToolModeTabs
+          value={mode === 'custom' ? 'quick' : 'detailed'}
+          hasAnalyses={analyses.length > 0}
+          onValueChange={(value) => {
+            setMode(value === 'quick' ? 'custom' : 'full');
+            setResult(null);
+            setError(null);
+            if (value === 'quick') setClientContext(null);
+            if (value === 'detailed' && selectedAnalysisId) fetchContext(selectedAnalysisId);
+          }}
+        />
 
         {mode === 'custom' && (
-          <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 flex items-center gap-3">
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 flex flex-row-reverse items-center gap-3">
             <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
             <p className="text-amber-400">هذه التوصيات مبنية على معطيات مُدخلة، وليست تحليلًا كاملًا.</p>
           </div>
@@ -555,7 +460,7 @@ export default function CampaignBrain() {
         )}
 
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_1.3fr] gap-8 lg:gap-12">
-          <div className="bg-card/50 rounded-2xl p-6 lg:p-8 border border-border/30">
+          <form className="bg-card/50 rounded-2xl p-6 lg:p-8 border border-border/30 text-right" dir="rtl" onSubmit={(e) => { e.preventDefault(); mode === 'full' ? handleGenerate() : handleGenerateCustom(); }}>
             <h2 className="text-xl font-semibold mb-2">
               {mode === 'full' ? 'مدخلات الحملة' : 'معلومات النشاط التجاري'}
             </h2>
@@ -770,9 +675,9 @@ export default function CampaignBrain() {
               )}
 
               <Button
-                onClick={mode === 'full' ? handleGenerate : handleGenerateCustom}
+                type="submit"
                 disabled={isLoading || (mode === 'full' ? !selectedAnalysisId : (!customData.businessType || !customData.goal))}
-                className="w-full bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white h-12 rounded-xl text-base"
+                className="w-full bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white h-12 rounded-xl text-base flex flex-row-reverse"
                 data-testid="button-generate"
               >
                 {isLoading ? (
@@ -788,7 +693,7 @@ export default function CampaignBrain() {
                 )}
               </Button>
             </div>
-          </div>
+          </form>
 
           <div className="space-y-6">
             {error && (
@@ -862,7 +767,21 @@ export default function CampaignBrain() {
                     </Card>
                   )}
 
-                  <div className="flex items-center justify-between flex-wrap gap-4" id="analysis-result" dir="rtl">
+                  <ExecutiveSummary
+                    icon={Lightbulb}
+                    title="ملخص أفكار الحملة"
+                    summary={result.message || result.recommendation || 'يوجد مسار حملات واضح مبني على المدخلات الحالية.'}
+                    badge={result.readyForCampaign === false ? 'يحتاج تجهيز' : mode === 'full' ? 'تحليل مفصل' : 'تحليل سريع'}
+                  />
+                  <ReportStatGrid
+                    items={[
+                      { icon: Target, label: 'عدد الأفكار', value: result.ideas?.length || 0, tone: 'amber' },
+                      { icon: DollarSign, label: 'إجمالي الميزانية', value: result.totalBudget || result.ideas?.[0]?.budget || 'غير محدد', tone: 'blue' },
+                      { icon: TrendingUp, label: 'العائد المتوقع', value: result.ideas?.[0]?.expectedROAS || '3x', tone: 'green' },
+                      { icon: Users, label: 'الوصول المتوقع', value: result.ideas?.[0]?.expectedReach || 'حسب الميزانية', tone: 'purple' },
+                    ]}
+                  />
+                  <div className="flex flex-row-reverse items-center justify-between flex-wrap gap-4" id="analysis-result" dir="rtl">
                     {result.message && (
                       <p className="text-muted-foreground p-3 bg-card rounded-lg flex-1 text-right">{result.message}</p>
                     )}
@@ -904,7 +823,7 @@ export default function CampaignBrain() {
                               {idea.expectedROAS && <Badge variant="outline" className="bg-emerald-500/20">ROAS: {idea.expectedROAS}</Badge>}
                             </div>
                           </div>
-                          <CardTitle className="text-lg mt-2 text-right">{idea.idea}</CardTitle>
+                          <CardTitle className="text-lg mt-2 text-right">{idea.title || idea.idea}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-5">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4" dir="rtl">
@@ -943,6 +862,14 @@ export default function CampaignBrain() {
                               <p className="text-sm text-blue-400">💰 الميزانية المقترحة: {idea.budget}</p>
                             </div>
                           )}
+                          {(idea.targetAudience || idea.duration || idea.expectedReach || idea.kpi) && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-right" dir="rtl">
+                              {idea.targetAudience && <Badge variant="outline">الجمهور: {idea.targetAudience}</Badge>}
+                              {idea.duration && <Badge variant="outline">المدة: {idea.duration}</Badge>}
+                              {idea.expectedReach && <Badge variant="outline">الوصول: {idea.expectedReach}</Badge>}
+                              {idea.kpi && <Badge variant="outline">المؤشر: {idea.kpi}</Badge>}
+                            </div>
+                          )}
 
                           {idea.warnings && idea.warnings.length > 0 && (
                             <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-right">
@@ -950,17 +877,14 @@ export default function CampaignBrain() {
                                 <AlertTriangle className="w-4 h-4" />
                                 تحذيرات
                               </div>
-                              <ul className="text-sm text-amber-200/80 space-y-1 text-right">
-                                {idea.warnings.map((warning, i) => (
-                                  <li key={i}>• {warning}</li>
-                                ))}
-                              </ul>
+                              <IconList items={idea.warnings} type="warning" />
                             </div>
                           )}
                         </CardContent>
                       </Card>
                     </motion.div>
                   ))}
+                  <NextStepsTimeline steps={result.nextSteps || result.prerequisiteActions} onCopy={() => navigator.clipboard.writeText(JSON.stringify(result, null, 2))} />
                 </motion.div>
               ) : null}
             </AnimatePresence>
