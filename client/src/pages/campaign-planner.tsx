@@ -1,18 +1,24 @@
 import { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/app-layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar, Sparkles, AlertTriangle, Target, DollarSign, TrendingUp, Users, Loader2, AlertCircle, ArrowLeft, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
+import { Calendar, Sparkles, AlertTriangle, Target, DollarSign, TrendingUp, Users, Loader2, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '@/lib/auth-context';
-import { Link } from 'wouter';
+import {
+  adPlatforms,
+  budgetRanges,
+  businessTypes,
+  campaignDurations,
+  campaignGoals,
+  marketingSeasons,
+  regions,
+} from '@/lib/marketing-options';
 
 interface PlanResult {
   readyToLaunch: boolean;
@@ -66,15 +72,17 @@ const formatAnalysisLabel = (analysis: Analysis): string => {
 };
 
 export default function CampaignPlanner() {
-  const { user } = useAuth();
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<number | null>(null);
   const [clientContext, setClientContext] = useState<ClientContext | null>(null);
   const [formData, setFormData] = useState({
+    businessType: '',
+    region: '',
     budget: '',
     duration: '',
     objective: '',
     platforms: [] as string[],
+    season: '',
   });
   const [result, setResult] = useState<PlanResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -139,8 +147,8 @@ export default function CampaignPlanner() {
   };
 
   const handlePlan = async () => {
-    if (!selectedAnalysisId) {
-      setError('يرجى اختيار تحليل سابق أو إجراء تحليل جديد');
+    if (!formData.businessType || !formData.region || !formData.objective || !formData.budget || !formData.duration) {
+      setError('يرجى تعبئة نوع النشاط، المنطقة، الهدف، الميزانية، ومدة الحملة');
       return;
     }
 
@@ -153,7 +161,7 @@ export default function CampaignPlanner() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          analysisId: selectedAnalysisId,
+          analysisId: selectedAnalysisId || undefined,
           inputs: formData,
         }),
       });
@@ -189,47 +197,6 @@ export default function CampaignPlanner() {
       <AppLayout>
         <div className="h-96 flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-        </div>
-      </AppLayout>
-    );
-  }
-
-  if (analyses.length === 0) {
-    return (
-      <AppLayout>
-        <div className="space-y-8 lg:space-y-10">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
-              <Calendar className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">مخطط الحملات</h1>
-              <p className="text-muted-foreground">مخطط الحملات - تخطيط الميزانية والمؤشرات</p>
-            </div>
-          </div>
-
-          <Card className="glass border-0">
-            <CardContent className="py-16">
-              <div className="text-center space-y-8 lg:space-y-10">
-                <div className="w-20 h-20 mx-auto rounded-full bg-blue-500/10 flex items-center justify-center">
-                  <AlertCircle className="w-10 h-10 text-blue-500" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold">يجب تحليل موقعك أولاً</h3>
-                  <p className="text-muted-foreground max-w-md mx-auto">
-                    لتخطيط حملة دقيقة بميزانية واقعية، نحتاج أن نفهم نشاطك التجاري أولاً.
-                    انتقل إلى محلل الأعمال لتحليل موقعك.
-                  </p>
-                </div>
-                <Link href="/business-analyzer">
-                  <Button className="bg-gradient-to-l from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white">
-                    <ArrowLeft className="w-4 h-4 ml-2" />
-                    انتقل لمحلل الأعمال
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </AppLayout>
     );
@@ -274,6 +241,15 @@ export default function CampaignPlanner() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {analyses.length === 0 && (
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 flex items-center gap-3 text-right" dir="rtl">
+            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+            <p className="text-sm text-amber-800 dark:text-amber-200">
+              لا توجد تحليلات مواقع محفوظة. يمكنك إنشاء خطة سريعة بالبيانات المدخلة، وسيصبح التحليل أعمق بعد تحليل الموقع.
+            </p>
+          </div>
         )}
 
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_1.3fr] gap-8 lg:gap-12">
@@ -329,27 +305,34 @@ export default function CampaignPlanner() {
               </div>
 
               <div className="space-y-2">
-                <Label>الميزانية الإجمالية (ريال) - اختياري</Label>
-                <Input
-                  type="number"
-                  placeholder="سيُستخدم النطاق من التحليل"
-                  value={formData.budget}
-                  onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                  className="bg-background/50"
-                  data-testid="input-campaign-budget"
-                />
+                <Label>نوع النشاط</Label>
+                <Select value={formData.businessType} onValueChange={(value) => setFormData({ ...formData, businessType: value })}>
+                  <SelectTrigger className="bg-background/50" data-testid="select-planner-business-type">
+                    <SelectValue placeholder="اختر نوع النشاط" />
+                  </SelectTrigger>
+                  <SelectContent>{businessTypes.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">يستخدم لتقدير متوسط التحويل وتكلفة الإعلان في السوق السعودي.</p>
               </div>
 
               <div className="space-y-2">
-                <Label>مدة الحملة (أيام) - اختياري</Label>
-                <Input
-                  type="number"
-                  placeholder="30"
-                  value={formData.duration}
-                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                  className="bg-background/50"
-                  data-testid="input-campaign-duration"
-                />
+                <Label>نطاق الميزانية الشهرية</Label>
+                <Select value={formData.budget} onValueChange={(value) => setFormData({ ...formData, budget: value })}>
+                  <SelectTrigger className="bg-background/50" data-testid="select-campaign-budget">
+                    <SelectValue placeholder="اختر نطاق الميزانية" />
+                  </SelectTrigger>
+                  <SelectContent>{budgetRanges.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>مدة الحملة</Label>
+                <Select value={formData.duration} onValueChange={(value) => setFormData({ ...formData, duration: value })}>
+                  <SelectTrigger className="bg-background/50" data-testid="select-campaign-duration">
+                    <SelectValue placeholder="اختر مدة الحملة" />
+                  </SelectTrigger>
+                  <SelectContent>{campaignDurations.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -359,31 +342,41 @@ export default function CampaignPlanner() {
                   onValueChange={(value) => setFormData({ ...formData, objective: value })}
                 >
                   <SelectTrigger className="bg-background/50" data-testid="select-objective">
-                    <SelectValue placeholder="اختر الهدف (اختياري)" />
+                    <SelectValue placeholder="اختر هدف الحملة" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="auto">تحديد تلقائي بناءً على التحليل</SelectItem>
-                    <SelectItem value="awareness">الوعي بالعلامة</SelectItem>
-                    <SelectItem value="traffic">زيادة الزيارات</SelectItem>
-                    <SelectItem value="engagement">التفاعل</SelectItem>
-                    <SelectItem value="leads">جمع البيانات</SelectItem>
-                    <SelectItem value="conversions">التحويلات</SelectItem>
-                    <SelectItem value="app_installs">تحميل التطبيق</SelectItem>
+                    {campaignGoals.map((goal) => (
+                      <SelectItem key={goal.value} value={goal.value}>{goal.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>المنطقة الجغرافية</Label>
+                  <Select value={formData.region} onValueChange={(value) => setFormData({ ...formData, region: value })}>
+                    <SelectTrigger className="bg-background/50" data-testid="select-campaign-region">
+                      <SelectValue placeholder="اختر المنطقة" />
+                    </SelectTrigger>
+                    <SelectContent>{regions.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>الموسم التسويقي</Label>
+                  <Select value={formData.season} onValueChange={(value) => setFormData({ ...formData, season: value })}>
+                    <SelectTrigger className="bg-background/50" data-testid="select-campaign-season">
+                      <SelectValue placeholder="اختر الموسم" />
+                    </SelectTrigger>
+                    <SelectContent>{marketingSeasons.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="space-y-3">
-                <Label>المنصات الإعلانية (اختياري)</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { id: 'meta', label: 'ميتا (فيسبوك/انستقرام)' },
-                    { id: 'google', label: 'قوقل أدز' },
-                    { id: 'twitter', label: 'تويتر / X' },
-                    { id: 'snapchat', label: 'سناب شات' },
-                    { id: 'tiktok', label: 'تيك توك' },
-                    { id: 'youtube', label: 'يوتيوب' },
-                  ].map((platform) => (
+                <Label>المنصات الإعلانية</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {adPlatforms.map((platform) => (
                     <div key={platform.id} className="flex items-center gap-2">
                       <Checkbox
                         id={`planner-platform-${platform.id}`}
@@ -410,7 +403,7 @@ export default function CampaignPlanner() {
 
               <Button
                 onClick={handlePlan}
-                disabled={isLoading || !selectedAnalysisId}
+                disabled={isLoading}
                 className="w-full bg-gradient-to-l from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white h-12 rounded-xl text-base"
                 data-testid="button-plan"
               >

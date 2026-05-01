@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/app-layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/lib/auth-context';
 import { AnalysisLoading } from '@/components/ui/analysis-loading';
 import { AnalysisActionBar } from '@/components/ui/analysis-action-bar';
+import { adPlatforms } from '@/lib/marketing-options';
 
 interface AnalysisResult {
   rating: 'ضعيف' | 'متوسط' | 'قوي';
@@ -34,6 +35,8 @@ const platformPatterns = [
   { pattern: /twitter\.com|x\.com/i, name: 'X / Twitter', icon: '𝕏' },
   { pattern: /snapchat\.com/i, name: 'Snapchat', icon: '👻' },
   { pattern: /youtube\.com|youtu\.be/i, name: 'YouTube', icon: '▶️' },
+  { pattern: /facebook\.com|fb\.com/i, name: 'Instagram/Meta', icon: '📘' },
+  { pattern: /linkedin\.com/i, name: 'LinkedIn', icon: '💼' },
 ];
 
 function detectPlatform(url: string): { name: string; icon: string } | null {
@@ -75,7 +78,7 @@ export default function SmartAnalyzer() {
     }
 
     if (!detectedPlatform) {
-      setError('يرجى إدخال رابط صالح من المنصات المدعومة (Instagram, TikTok, X, Snapchat)');
+      setError('يرجى إدخال رابط صالح من المنصات المدعومة: Snapchat, Instagram/Meta, TikTok, X, YouTube, LinkedIn');
       return;
     }
 
@@ -90,7 +93,7 @@ export default function SmartAnalyzer() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tool: 'smart_analyzer',
-          inputs: { accountUrl },
+          inputs: { accountUrl, platform: detectedPlatform.name },
           userId: user?.id,
         }),
       });
@@ -153,7 +156,7 @@ export default function SmartAnalyzer() {
           </div>
         </div>
 
-        <div className="bg-[#1a2744]/10 dark:bg-[#1a2744]/30 border border-[#3B82F6]/20 rounded-xl p-4 flex items-center gap-3">
+        <div className="bg-[#1a2744]/10 dark:bg-[#1a2744]/30 border border-[#3B82F6]/20 rounded-xl p-4 flex items-center gap-3 text-right" dir="rtl">
           <Info className="w-5 h-5 text-[#3B82F6] flex-shrink-0" />
           <p className="text-muted-foreground">
             هذا التحليل تقديري ذكي مبني على قراءة عامة للحساب، وليس تحليلاً رسمياً عبر واجهات برمجية (API).
@@ -161,14 +164,14 @@ export default function SmartAnalyzer() {
         </div>
 
         {!result && (
-          <div className="bg-card/50 rounded-2xl p-8 lg:p-10 border border-border/30">
+          <div className="bg-card/50 rounded-2xl p-8 lg:p-10 border border-border/30" dir="rtl">
             <div className="max-w-3xl mx-auto">
               <h2 className="text-xl font-semibold mb-2 text-center">تحليل حساب تواصل اجتماعي</h2>
               <p className="text-muted-foreground mb-6 text-center">أدخل رابط الحساب لتحليل جودته وجاهزيته الإعلانية</p>
               
               <div className="space-y-4">
                 <div>
-                  <Label className="mb-2 block">رابط الحساب *</Label>
+                  <Label className="mb-2 block text-right">رابط الحساب *</Label>
                   <Input
                     placeholder="https://instagram.com/username"
                     value={accountUrl}
@@ -178,7 +181,7 @@ export default function SmartAnalyzer() {
                     data-testid="input-account-url"
                   />
                   {detectedPlatform && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                    <div className="flex flex-row-reverse items-center gap-2 text-sm text-muted-foreground mt-2">
                       <span>{detectedPlatform.icon}</span>
                       <span>تم اكتشاف: {detectedPlatform.name}</span>
                     </div>
@@ -187,10 +190,10 @@ export default function SmartAnalyzer() {
 
                 <div className="space-y-2">
                   <Label className="text-muted-foreground text-xs">المنصات المدعومة</Label>
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {platformPatterns.map((p) => (
-                      <Badge key={p.name} variant="outline" className="text-xs">
-                        {p.icon} {p.name}
+                  <div className="flex flex-wrap gap-2 justify-center" dir="rtl">
+                    {adPlatforms.filter((p) => p.value !== 'google_ads' && p.value !== 'multi').map((p) => (
+                      <Badge key={p.value} variant="outline" className="text-xs">
+                        {p.label}
                       </Badge>
                     ))}
                   </div>
