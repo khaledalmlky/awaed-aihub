@@ -14,6 +14,20 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/lib/auth-context';
 import { Link } from 'wouter';
+import {
+  adPlatforms,
+  ageRanges,
+  budgetRanges,
+  businessTypes,
+  campaignGoals,
+  contentTypes,
+  genders,
+  marketingSeasons,
+  regions,
+  socialSegments,
+  tones,
+  optionLabel,
+} from '@/lib/marketing-options';
 import { ExecutiveSummary, NextStepsTimeline, ReportStatGrid, SectionCard, ToolModeTabs } from '@/components/ai/tool-report-widgets';
 
 interface ClientContext {
@@ -78,57 +92,7 @@ const formatAnalysisLabel = (analysis: Analysis): string => {
   return `${name} — ${score}/100 — ${date}`;
 };
 
-const tones = [
-  { value: 'professional', label: 'احترافي', description: 'أسلوب رسمي ومهني' },
-  { value: 'friendly', label: 'ودي', description: 'أسلوب قريب ودافئ' },
-  { value: 'motivational', label: 'تحفيزي', description: 'أسلوب ملهم ومحفز' },
-  { value: 'educational', label: 'تعليمي', description: 'أسلوب شرح وتوضيح' },
-  { value: 'fun', label: 'مرح', description: 'أسلوب خفيف وممتع' },
-];
-
-const contentTypes = [
-  { value: 'post', label: 'منشور عادي' },
-  { value: 'story', label: 'ستوري' },
-  { value: 'reel', label: 'ريلز / فيديو قصير' },
-  { value: 'thread', label: 'ثريد' },
-  { value: 'ad', label: 'إعلان' },
-];
-
-const businessTypes = [
-  { id: 'ecommerce', label: 'متجر إلكتروني' },
-  { id: 'services', label: 'خدمات' },
-  { id: 'restaurant', label: 'مطعم / كافيه' },
-  { id: 'education', label: 'تعليم / تدريب' },
-  { id: 'health', label: 'صحة / جمال' },
-  { id: 'realestate', label: 'عقارات' },
-  { id: 'technology', label: 'تقنية' },
-  { id: 'other', label: 'آخر' },
-];
-
-const goals = [
-  { id: 'sales', label: 'زيادة المبيعات' },
-  { id: 'awareness', label: 'زيادة الوعي بالعلامة' },
-  { id: 'leads', label: 'جمع بيانات العملاء' },
-  { id: 'engagement', label: 'زيادة التفاعل' },
-  { id: 'traffic', label: 'زيادة زيارات الموقع' },
-];
-
-const audiences = [
-  { id: 'youth', label: 'شباب (18-25)' },
-  { id: 'adults', label: 'بالغين (25-40)' },
-  { id: 'mature', label: 'كبار (40+)' },
-  { id: 'families', label: 'عائلات' },
-  { id: 'business', label: 'أصحاب أعمال' },
-];
-
-const platforms = [
-  { id: 'instagram', label: 'انستقرام' },
-  { id: 'snapchat', label: 'سناب شات' },
-  { id: 'tiktok', label: 'تيك توك' },
-  { id: 'twitter', label: 'تويتر / X' },
-];
-
-type Mode = 'full' | 'guided';
+type Mode = 'select' | 'full' | 'guided';
 
 export default function ContentStudio() {
   useAuth();
@@ -138,8 +102,8 @@ export default function ContentStudio() {
   const [clientContext, setClientContext] = useState<ClientContext | null>(null);
   const [guidedContext, setGuidedContext] = useState<GuidedContext | null>(null);
   const [prompt, setPrompt] = useState('');
-  const [tone, setTone] = useState('professional');
-  const [contentType, setContentType] = useState('post');
+  const [tone, setTone] = useState('formal_professional');
+  const [contentType, setContentType] = useState('brand_awareness_post');
   const [result, setResult] = useState<ContentResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingAnalyses, setIsLoadingAnalyses] = useState(true);
@@ -148,10 +112,15 @@ export default function ContentStudio() {
   const [needsLogin, setNeedsLogin] = useState(false);
   const [guidedData, setGuidedData] = useState({
     businessType: '',
-    targetAudience: '',
+    ageRange: '',
+    gender: '',
+    socialSegment: '',
+    region: '',
+    interests: [] as string[],
     goal: '',
     platforms: [] as string[],
     budget: '',
+    season: '',
   });
 
   useEffect(() => {
@@ -287,8 +256,8 @@ export default function ContentStudio() {
   };
 
   const handleGenerateGuided = async () => {
-    if (!guidedData.businessType || !guidedData.targetAudience || !guidedData.goal || guidedData.platforms.length === 0) {
-      setError('يرجى تعبئة جميع الحقول المطلوبة: نوع النشاط، الفئة المستهدفة، الهدف، والمنصة');
+    if (!guidedData.businessType || !guidedData.ageRange || !guidedData.gender || !guidedData.socialSegment || !guidedData.region || !guidedData.goal || guidedData.platforms.length === 0) {
+      setError('يرجى تعبئة الحقول المطلوبة: النشاط، العمر، الجنس، الفئة، المنطقة، الهدف، والمنصة');
       return;
     }
 
@@ -300,7 +269,10 @@ export default function ContentStudio() {
     const submittedData = JSON.parse(JSON.stringify(guidedData));
     const filledFieldsCount = [
       submittedData.businessType,
-      submittedData.targetAudience,
+      submittedData.ageRange,
+      submittedData.gender,
+      submittedData.socialSegment,
+      submittedData.region,
       submittedData.goal,
       submittedData.platforms.length > 0,
       submittedData.budget,
@@ -340,7 +312,12 @@ export default function ContentStudio() {
         setResult(data.result);
         setGuidedContext({
           businessType: submittedData.businessType,
-          targetAudience: submittedData.targetAudience,
+          targetAudience: [
+            optionLabel(ageRanges, submittedData.ageRange),
+            optionLabel(genders, submittedData.gender),
+            optionLabel(socialSegments, submittedData.socialSegment),
+            optionLabel(regions, submittedData.region),
+          ].join(' • '),
           goal: submittedData.goal,
           platforms: submittedData.platforms,
           budget: submittedData.budget || undefined,
@@ -569,67 +546,123 @@ export default function ContentStudio() {
                   </div>
                 </>
               ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label>نوع النشاط *</Label>
-                    <Select value={guidedData.businessType} onValueChange={(v) => setGuidedData({...guidedData, businessType: v})}>
-                      <SelectTrigger className="bg-background/50">
-                        <SelectValue placeholder="اختر نوع النشاط" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {businessTypes.map((t) => (
-                          <SelectItem key={t.id} value={t.label}>{t.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                <div className="space-y-5" dir="rtl">
+                  <div className="space-y-4 rounded-xl border border-border/30 bg-background/30 p-4">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-pink-500" />
+                      معلومات النشاط
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>نوع النشاط *</Label>
+                        <Select value={guidedData.businessType} onValueChange={(v) => setGuidedData({...guidedData, businessType: v})}>
+                          <SelectTrigger className="bg-background/50">
+                            <SelectValue placeholder="اختر نوع النشاط" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {businessTypes.map((type) => (
+                              <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>هدف المحتوى *</Label>
+                        <Select value={guidedData.goal} onValueChange={(v) => setGuidedData({...guidedData, goal: v})}>
+                          <SelectTrigger className="bg-background/50">
+                            <SelectValue placeholder="اختر الهدف" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {campaignGoals.map((goal) => (
+                              <SelectItem key={goal.value} value={goal.value}>{goal.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>الهدف *</Label>
-                    <Select value={guidedData.goal} onValueChange={(v) => setGuidedData({...guidedData, goal: v})}>
-                      <SelectTrigger className="bg-background/50">
-                        <SelectValue placeholder="اختر الهدف" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {goals.map((g) => (
-                          <SelectItem key={g.id} value={g.label}>{g.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+
+                  <div className="space-y-4 rounded-xl border border-border/30 bg-background/30 p-4">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Target className="w-4 h-4 text-blue-500" />
+                      الجمهور المستهدف
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>الفئة العمرية *</Label>
+                        <Select value={guidedData.ageRange} onValueChange={(v) => setGuidedData({...guidedData, ageRange: v})}>
+                          <SelectTrigger className="bg-background/50"><SelectValue placeholder="اختر العمر" /></SelectTrigger>
+                          <SelectContent>{ageRanges.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>الجنس *</Label>
+                        <Select value={guidedData.gender} onValueChange={(v) => setGuidedData({...guidedData, gender: v})}>
+                          <SelectTrigger className="bg-background/50"><SelectValue placeholder="اختر الجنس" /></SelectTrigger>
+                          <SelectContent>{genders.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>الفئة الاجتماعية/المهنية *</Label>
+                        <Select value={guidedData.socialSegment} onValueChange={(v) => setGuidedData({...guidedData, socialSegment: v})}>
+                          <SelectTrigger className="bg-background/50"><SelectValue placeholder="اختر الفئة" /></SelectTrigger>
+                          <SelectContent>{socialSegments.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>المنطقة الجغرافية *</Label>
+                        <Select value={guidedData.region} onValueChange={(v) => setGuidedData({...guidedData, region: v})}>
+                          <SelectTrigger className="bg-background/50"><SelectValue placeholder="اختر المنطقة" /></SelectTrigger>
+                          <SelectContent>{regions.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>الفئة المستهدفة *</Label>
-                    <Select value={guidedData.targetAudience} onValueChange={(v) => setGuidedData({...guidedData, targetAudience: v})}>
-                      <SelectTrigger className="bg-background/50">
-                        <SelectValue placeholder="اختر الفئة" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {audiences.map((a) => (
-                          <SelectItem key={a.id} value={a.label}>{a.label}</SelectItem>
+
+                  <div className="space-y-4 rounded-xl border border-border/30 bg-background/30 p-4">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Hash className="w-4 h-4 text-emerald-500" />
+                      المنصة والموسم
+                    </h3>
+                    <div className="space-y-2">
+                      <Label>المنصة *</Label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {adPlatforms.map((platform) => (
+                          <div key={platform.id} className="flex items-center gap-2">
+                            <Checkbox
+                              id={`content-platform-${platform.id}`}
+                              checked={guidedData.platforms.includes(platform.id)}
+                              onCheckedChange={(checked) => {
+                                setGuidedData({
+                                  ...guidedData,
+                                  platforms: checked
+                                    ? [...guidedData.platforms, platform.id]
+                                    : guidedData.platforms.filter(p => p !== platform.id),
+                                });
+                              }}
+                            />
+                            <label htmlFor={`content-platform-${platform.id}`} className="text-sm cursor-pointer">
+                              {platform.label}
+                            </label>
+                          </div>
                         ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2 col-span-2">
-                    <Label>المنصة *</Label>
-                    <div className="flex flex-wrap gap-3">
-                      {platforms.map((platform) => (
-                        <div key={platform.id} className="flex items-center gap-2">
-                          <Checkbox
-                            id={`content-platform-${platform.id}`}
-                            checked={guidedData.platforms.includes(platform.label)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setGuidedData({ ...guidedData, platforms: [...guidedData.platforms, platform.label] });
-                              } else {
-                                setGuidedData({ ...guidedData, platforms: guidedData.platforms.filter(p => p !== platform.label) });
-                              }
-                            }}
-                          />
-                          <label htmlFor={`content-platform-${platform.id}`} className="text-sm cursor-pointer">
-                            {platform.label}
-                          </label>
-                        </div>
-                      ))}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>نطاق الميزانية</Label>
+                        <Select value={guidedData.budget} onValueChange={(v) => setGuidedData({...guidedData, budget: v})}>
+                          <SelectTrigger className="bg-background/50"><SelectValue placeholder="اختر الميزانية" /></SelectTrigger>
+                          <SelectContent>{budgetRanges.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>الموسم التسويقي</Label>
+                        <Select value={guidedData.season} onValueChange={(v) => setGuidedData({...guidedData, season: v})}>
+                          <SelectTrigger className="bg-background/50"><SelectValue placeholder="اختر الموسم" /></SelectTrigger>
+                          <SelectContent>{marketingSeasons.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -678,7 +711,7 @@ export default function ContentStudio() {
 
               <Button
                 onClick={mode === 'full' ? handleGenerate : handleGenerateGuided}
-                disabled={isLoading || !prompt || (mode === 'full' ? !selectedAnalysisId : (!guidedData.businessType || !guidedData.goal || !guidedData.targetAudience || guidedData.platforms.length === 0))}
+                disabled={isLoading || !prompt || (mode === 'full' ? !selectedAnalysisId : (!guidedData.businessType || !guidedData.goal || !guidedData.ageRange || !guidedData.gender || !guidedData.socialSegment || !guidedData.region || guidedData.platforms.length === 0))}
                 className={`w-full ${mode === 'full' ? 'bg-gradient-to-l from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600' : 'bg-gradient-to-l from-amber-500 to-orange-500 hover:opacity-90'} text-white h-12 rounded-xl text-base`}
                 data-testid="button-generate-content"
               >

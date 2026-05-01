@@ -13,7 +13,7 @@ const responseCache = new Map<string, { result: any; timestamp: number }>();
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
 const platformBlockSchema = z.object({
-  platform: z.enum(['meta', 'tiktok', 'snapchat', 'google']),
+  platform: z.enum(['snapchat', 'instagram_meta', 'tiktok', 'twitter_x', 'youtube', 'google_ads', 'linkedin']),
   spend: z.number().min(0),
   impressions: z.number().min(0).optional(),
   clicks: z.number().min(0).optional(),
@@ -68,10 +68,13 @@ function setCachedResponse(key: string, result: any): void {
 }
 
 const PLATFORM_LABELS: Record<string, string> = {
-  meta: 'ميتا (فيسبوك/إنستقرام)',
-  tiktok: 'تيك توك',
-  snapchat: 'سناب شات',
-  google: 'قوقل',
+  snapchat: 'Snapchat',
+  instagram_meta: 'Instagram/Meta',
+  tiktok: 'TikTok',
+  twitter_x: 'Twitter/X',
+  youtube: 'YouTube',
+  google_ads: 'Google Ads',
+  linkedin: 'LinkedIn',
 };
 
 function buildAnalysisPrompt(input: PerformanceAnalysisInput, platformsWithKPIs: Array<{ platform: PlatformBlock; kpis: Record<string, number | null> }>): string {

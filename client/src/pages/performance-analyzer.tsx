@@ -24,9 +24,9 @@ import {
   Zap,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '@/lib/auth-context';
+import { businessTypes, campaignGoals, optionLabel, performancePlatforms } from '@/lib/marketing-options';
 
-type Platform = 'meta' | 'tiktok' | 'snapchat' | 'google';
+type Platform = 'snapchat' | 'instagram_meta' | 'tiktok' | 'twitter_x' | 'youtube' | 'google_ads' | 'linkedin';
 
 interface PlatformBlock {
   id: string;
@@ -69,13 +69,6 @@ interface AnalysisResult {
   platformsWithKPIs: PlatformKPIs[];
 }
 
-const platformOptions = [
-  { value: 'meta', label: 'ميتا (فيسبوك/إنستقرام)', icon: Share2 },
-  { value: 'tiktok', label: 'تيك توك', icon: BarChart3 },
-  { value: 'snapchat', label: 'سناب شات', icon: Zap },
-  { value: 'google', label: 'قوقل', icon: Target },
-];
-
 const getRatingColor = (rating: string) => {
   if (rating === 'قوي') return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
   if (rating === 'متوسط') return 'text-amber-400 bg-amber-500/10 border-amber-500/30';
@@ -101,7 +94,7 @@ export default function PerformanceAnalyzer() {
   const addPlatform = () => {
     const newPlatform: PlatformBlock = {
       id: `platform-${Date.now()}`,
-      platform: 'meta',
+      platform: 'instagram_meta',
       spend: '',
       impressions: '',
       clicks: '',
@@ -426,25 +419,33 @@ ${result.crossPlatformSummary}
             <CardDescription>ساعدنا على فهم سياق حملتك للحصول على تحليل أفضل</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="campaignGoal">هدف الحملة</Label>
-              <Input
-                id="campaignGoal"
-                placeholder="مثال: زيادة المبيعات، الوعي بالعلامة، جمع عملاء محتملين..."
-                value={campaignGoal}
-                onChange={(e) => setCampaignGoal(e.target.value)}
-                data-testid="input-campaign-goal"
-              />
-            </div>
-            <div>
-              <Label htmlFor="industryType">نوع النشاط</Label>
-              <Input
-                id="industryType"
-                placeholder="مثال: تجارة إلكترونية، خدمات، مطاعم..."
-                value={industryType}
-                onChange={(e) => setIndustryType(e.target.value)}
-                data-testid="input-industry-type"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4" dir="rtl">
+              <div className="space-y-2">
+                <Label htmlFor="campaignGoal">هدف الحملة</Label>
+                <Select value={campaignGoal} onValueChange={setCampaignGoal}>
+                  <SelectTrigger id="campaignGoal" data-testid="select-campaign-goal">
+                    <SelectValue placeholder="اختر هدف الحملة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {campaignGoals.map((goal) => (
+                      <SelectItem key={goal.value} value={goal.value}>{goal.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="industryType">نوع النشاط</Label>
+                <Select value={industryType} onValueChange={setIndustryType}>
+                  <SelectTrigger id="industryType" data-testid="select-industry-type">
+                    <SelectValue placeholder="اختر نوع النشاط" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {businessTypes.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -504,7 +505,7 @@ ${result.crossPlatformSummary}
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {platformOptions.map((opt) => (
+                          {performancePlatforms.map((opt) => (
                             <SelectItem key={opt.value} value={opt.value}>
                               {opt.label}
                             </SelectItem>

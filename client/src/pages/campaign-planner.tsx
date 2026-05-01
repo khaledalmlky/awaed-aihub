@@ -10,6 +10,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar, Sparkles, AlertTriangle, Target, DollarSign, TrendingUp, Users, Loader2, CheckCircle2, XCircle, Trash2, MousePointer } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  adPlatforms,
+  budgetRanges,
+  businessTypes,
+  campaignDurations,
+  campaignGoals,
+  marketingSeasons,
+  regions,
+} from '@/lib/marketing-options';
 import { ExecutiveSummary, NextStepsTimeline, ReportStatGrid, ToolModeTabs } from '@/components/ai/tool-report-widgets';
 
 interface PlanResult {
@@ -79,11 +88,13 @@ export default function CampaignPlanner() {
   const [clientContext, setClientContext] = useState<ClientContext | null>(null);
   const [formData, setFormData] = useState({
     businessType: '',
+    region: '',
     targetAudience: '',
     budget: '',
     duration: '',
     objective: '',
     platforms: [] as string[],
+    season: '',
   });
   const [result, setResult] = useState<PlanResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -152,8 +163,8 @@ export default function CampaignPlanner() {
       setError('يرجى اختيار تحليل سابق أو إجراء تحليل جديد');
       return;
     }
-    if (plannerMode === 'quick' && (!formData.businessType || !formData.objective)) {
-      setError('يرجى إدخال نوع النشاط وهدف الحملة للتحليل السريع');
+    if (plannerMode === 'quick' && (!formData.businessType || !formData.region || !formData.objective || !formData.budget || !formData.duration)) {
+      setError('يرجى تعبئة نوع النشاط، المنطقة، الهدف، الميزانية، ومدة الحملة');
       return;
     }
 
@@ -262,6 +273,15 @@ export default function CampaignPlanner() {
           </Card>
         )}
 
+        {analyses.length === 0 && (
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 flex items-center gap-3 text-right" dir="rtl">
+            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+            <p className="text-sm text-amber-800 dark:text-amber-200">
+              لا توجد تحليلات مواقع محفوظة. يمكنك إنشاء خطة سريعة بالبيانات المدخلة، وسيصبح التحليل أعمق بعد تحليل الموقع.
+            </p>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_1.3fr] gap-8 lg:gap-12">
           <div className="bg-card/50 rounded-2xl p-6 lg:p-8 border border-border/30" dir="rtl">
             <h2 className="text-xl font-semibold mb-2">تفاصيل الحملة</h2>
@@ -342,27 +362,34 @@ export default function CampaignPlanner() {
               )}
 
               <div className="space-y-2">
-                <Label>الميزانية الإجمالية (ريال) - اختياري</Label>
-                <Input
-                  type="number"
-                  placeholder="سيُستخدم النطاق من التحليل"
-                  value={formData.budget}
-                  onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                  className="bg-background/50"
-                  data-testid="input-campaign-budget"
-                />
+                <Label>نوع النشاط</Label>
+                <Select value={formData.businessType} onValueChange={(value) => setFormData({ ...formData, businessType: value })}>
+                  <SelectTrigger className="bg-background/50" data-testid="select-planner-business-type">
+                    <SelectValue placeholder="اختر نوع النشاط" />
+                  </SelectTrigger>
+                  <SelectContent>{businessTypes.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">يستخدم لتقدير متوسط التحويل وتكلفة الإعلان في السوق السعودي.</p>
               </div>
 
               <div className="space-y-2">
-                <Label>مدة الحملة (أيام) - اختياري</Label>
-                <Input
-                  type="number"
-                  placeholder="30"
-                  value={formData.duration}
-                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                  className="bg-background/50"
-                  data-testid="input-campaign-duration"
-                />
+                <Label>نطاق الميزانية الشهرية</Label>
+                <Select value={formData.budget} onValueChange={(value) => setFormData({ ...formData, budget: value })}>
+                  <SelectTrigger className="bg-background/50" data-testid="select-campaign-budget">
+                    <SelectValue placeholder="اختر نطاق الميزانية" />
+                  </SelectTrigger>
+                  <SelectContent>{budgetRanges.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>مدة الحملة</Label>
+                <Select value={formData.duration} onValueChange={(value) => setFormData({ ...formData, duration: value })}>
+                  <SelectTrigger className="bg-background/50" data-testid="select-campaign-duration">
+                    <SelectValue placeholder="اختر مدة الحملة" />
+                  </SelectTrigger>
+                  <SelectContent>{campaignDurations.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -372,31 +399,41 @@ export default function CampaignPlanner() {
                   onValueChange={(value) => setFormData({ ...formData, objective: value })}
                 >
                   <SelectTrigger className="bg-background/50" data-testid="select-objective">
-                    <SelectValue placeholder="اختر الهدف (اختياري)" />
+                    <SelectValue placeholder="اختر هدف الحملة" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="auto">تحديد تلقائي بناءً على التحليل</SelectItem>
-                    <SelectItem value="awareness">الوعي بالعلامة</SelectItem>
-                    <SelectItem value="traffic">زيادة الزيارات</SelectItem>
-                    <SelectItem value="engagement">التفاعل</SelectItem>
-                    <SelectItem value="leads">جمع البيانات</SelectItem>
-                    <SelectItem value="conversions">التحويلات</SelectItem>
-                    <SelectItem value="app_installs">تحميل التطبيق</SelectItem>
+                    {campaignGoals.map((goal) => (
+                      <SelectItem key={goal.value} value={goal.value}>{goal.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>المنطقة الجغرافية</Label>
+                  <Select value={formData.region} onValueChange={(value) => setFormData({ ...formData, region: value })}>
+                    <SelectTrigger className="bg-background/50" data-testid="select-campaign-region">
+                      <SelectValue placeholder="اختر المنطقة" />
+                    </SelectTrigger>
+                    <SelectContent>{regions.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>الموسم التسويقي</Label>
+                  <Select value={formData.season} onValueChange={(value) => setFormData({ ...formData, season: value })}>
+                    <SelectTrigger className="bg-background/50" data-testid="select-campaign-season">
+                      <SelectValue placeholder="اختر الموسم" />
+                    </SelectTrigger>
+                    <SelectContent>{marketingSeasons.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="space-y-3">
-                <Label>المنصات الإعلانية (اختياري)</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { id: 'meta', label: 'ميتا (فيسبوك/انستقرام)' },
-                    { id: 'google', label: 'قوقل أدز' },
-                    { id: 'twitter', label: 'تويتر / X' },
-                    { id: 'snapchat', label: 'سناب شات' },
-                    { id: 'tiktok', label: 'تيك توك' },
-                    { id: 'youtube', label: 'يوتيوب' },
-                  ].map((platform) => (
+                <Label>المنصات الإعلانية</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {adPlatforms.map((platform) => (
                     <div key={platform.id} className="flex items-center gap-2">
                       <Checkbox
                         id={`planner-platform-${platform.id}`}
@@ -423,7 +460,7 @@ export default function CampaignPlanner() {
 
               <Button
                 onClick={handlePlan}
-                disabled={isLoading || (plannerMode === 'detailed' ? !selectedAnalysisId : (!formData.businessType || !formData.objective))}
+                disabled={isLoading || (plannerMode === 'detailed' ? !selectedAnalysisId : (!formData.businessType || !formData.region || !formData.objective || !formData.budget || !formData.duration))}
                 className="w-full bg-gradient-to-l from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white h-12 rounded-xl text-base"
                 data-testid="button-plan"
               >

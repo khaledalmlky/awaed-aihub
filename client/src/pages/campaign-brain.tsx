@@ -14,6 +14,20 @@ import { useAuth } from '@/lib/auth-context';
 import { Link } from 'wouter';
 import { AnalysisLoading } from '@/components/ui/analysis-loading';
 import { AnalysisActions } from '@/components/ui/analysis-actions';
+import {
+  adPlatforms,
+  ageRanges,
+  budgetRanges,
+  businessTypes,
+  campaignDurations,
+  campaignGoals,
+  genders,
+  interests,
+  marketingSeasons,
+  optionLabel,
+  regions,
+  socialSegments,
+} from '@/lib/marketing-options';
 import { ExecutiveSummary, IconList, NextStepsTimeline, ReportStatGrid, ToolModeTabs } from '@/components/ai/tool-report-widgets';
 
 interface CampaignIdea {
@@ -98,13 +112,20 @@ export default function CampaignBrain() {
     platforms: [] as string[],
     budget: '',
     duration: '',
+    season: '',
   });
   const [customData, setCustomData] = useState({
     businessType: '',
-    targetAudience: '',
+    ageRange: '',
+    gender: '',
+    socialSegment: '',
+    region: '',
+    interests: [] as string[],
     goal: '',
     platforms: [] as string[],
     budget: '',
+    duration: '',
+    season: '',
   });
   const [result, setResult] = useState<BrainResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -304,15 +325,18 @@ export default function CampaignBrain() {
   }
 
   const handleGenerateCustom = async () => {
-    if (!customData.businessType || !customData.targetAudience || !customData.goal || customData.platforms.length === 0) {
-      setError('يرجى تعبئة جميع الحقول المطلوبة: نوع النشاط، الفئة المستهدفة، الهدف، والمنصة');
+    if (!customData.businessType || !customData.ageRange || !customData.gender || !customData.socialSegment || !customData.region || !customData.goal || customData.platforms.length === 0) {
+      setError('يرجى تعبئة الحقول المطلوبة: النشاط، العمر، الجنس، الفئة، المنطقة، الهدف، والمنصة');
       return;
     }
 
     const submittedData = JSON.parse(JSON.stringify(customData));
     const filledFieldsCount = [
       submittedData.businessType,
-      submittedData.targetAudience,
+      submittedData.ageRange,
+      submittedData.gender,
+      submittedData.socialSegment,
+      submittedData.region,
       submittedData.goal,
       submittedData.platforms.length > 0,
       submittedData.budget,
@@ -349,7 +373,12 @@ export default function CampaignBrain() {
         setResult(data.result);
         setCustomContext({
           businessType: submittedData.businessType,
-          targetAudience: submittedData.targetAudience,
+          targetAudience: [
+            optionLabel(ageRanges, submittedData.ageRange),
+            optionLabel(genders, submittedData.gender),
+            optionLabel(socialSegments, submittedData.socialSegment),
+            optionLabel(regions, submittedData.region),
+          ].join(' • '),
           goal: submittedData.goal,
           platforms: submittedData.platforms,
           budget: submittedData.budget || undefined,
@@ -518,66 +547,121 @@ export default function CampaignBrain() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="goal">الهدف الرئيسي</Label>
+                    <Label htmlFor="goal">هدف الحملة</Label>
                     <Select
                       value={formData.goal}
                       onValueChange={(value) => setFormData({ ...formData, goal: value })}
                     >
                       <SelectTrigger className="bg-background/50" data-testid="select-goal">
-                        <SelectValue placeholder="اختر الهدف" />
+                        <SelectValue placeholder="اختر هدف الحملة" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="awareness">زيادة الوعي</SelectItem>
-                        <SelectItem value="engagement">زيادة التفاعل</SelectItem>
-                        <SelectItem value="sales">زيادة المبيعات</SelectItem>
-                        <SelectItem value="conversion">زيادة التحويلات</SelectItem>
-                        <SelectItem value="retention">الاحتفاظ بالعملاء</SelectItem>
-                        <SelectItem value="downloads">زيادة التحميلات</SelectItem>
+                        {campaignGoals.map((goal) => (
+                          <SelectItem key={goal.value} value={goal.value}>{goal.label}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground">اختر هدفاً واحداً حتى تكون الأفكار قابلة للقياس.</p>
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="space-y-2">
-                    <Label>نوع النشاط *</Label>
-                    <Input
-                      placeholder="مثال: مطعم، متجر إلكتروني، صالون تجميل، شركة خدمات..."
-                      value={customData.businessType}
-                      onChange={(e) => setCustomData({ ...customData, businessType: e.target.value })}
-                      className="bg-background/50 text-right"
-                      dir="rtl"
-                      data-testid="input-business-type"
-                    />
+                  <div className="space-y-4 rounded-xl border border-border/30 bg-background/30 p-4" dir="rtl">
+                    <div>
+                      <h3 className="font-semibold flex items-center gap-2"><FileText className="w-4 h-4 text-amber-500" /> معلومات النشاط</h3>
+                      <p className="text-xs text-muted-foreground mt-1">اختيارات موحدة حسب قطاعات السوق السعودي.</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>نوع النشاط *</Label>
+                      <Select
+                        value={customData.businessType}
+                        onValueChange={(value) => setCustomData({ ...customData, businessType: value })}
+                      >
+                        <SelectTrigger className="bg-background/50" data-testid="select-business-type">
+                          <SelectValue placeholder="اختر نوع النشاط" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {businessTypes.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 rounded-xl border border-border/30 bg-background/30 p-4" dir="rtl">
+                    <div>
+                      <h3 className="font-semibold flex items-center gap-2"><Target className="w-4 h-4 text-blue-500" /> الجمهور المستهدف</h3>
+                      <p className="text-xs text-muted-foreground mt-1">العمر والجنس والفئة والمنطقة مفصولة بدون تداخل.</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>الفئة العمرية *</Label>
+                        <Select value={customData.ageRange} onValueChange={(value) => setCustomData({ ...customData, ageRange: value })}>
+                          <SelectTrigger className="bg-background/50"><SelectValue placeholder="اختر العمر" /></SelectTrigger>
+                          <SelectContent>{ageRanges.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>الجنس *</Label>
+                        <Select value={customData.gender} onValueChange={(value) => setCustomData({ ...customData, gender: value })}>
+                          <SelectTrigger className="bg-background/50"><SelectValue placeholder="اختر الجنس" /></SelectTrigger>
+                          <SelectContent>{genders.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>الفئة الاجتماعية/المهنية *</Label>
+                        <Select value={customData.socialSegment} onValueChange={(value) => setCustomData({ ...customData, socialSegment: value })}>
+                          <SelectTrigger className="bg-background/50"><SelectValue placeholder="اختر الفئة" /></SelectTrigger>
+                          <SelectContent>{socialSegments.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>المنطقة الجغرافية *</Label>
+                        <Select value={customData.region} onValueChange={(value) => setCustomData({ ...customData, region: value })}>
+                          <SelectTrigger className="bg-background/50"><SelectValue placeholder="اختر المنطقة" /></SelectTrigger>
+                          <SelectContent>{regions.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <Label>الاهتمامات (اختياري)</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {interests.map((interest) => (
+                          <div key={interest.id} className="flex items-center gap-2">
+                            <Checkbox
+                              id={`interest-${interest.id}`}
+                              checked={customData.interests.includes(interest.id)}
+                              onCheckedChange={(checked) => {
+                                setCustomData({
+                                  ...customData,
+                                  interests: checked
+                                    ? [...customData.interests, interest.id]
+                                    : customData.interests.filter((item) => item !== interest.id),
+                                });
+                              }}
+                            />
+                            <Label htmlFor={`interest-${interest.id}`} className="text-sm cursor-pointer">{interest.label}</Label>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground">اختيار 2-4 اهتمامات يساعد في زوايا حملات أدق.</p>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>الفئة المستهدفة *</Label>
-                    <Input
-                      placeholder="مثال: شباب سعوديين 18-35، أمهات، رواد أعمال..."
-                      value={customData.targetAudience}
-                      onChange={(e) => setCustomData({ ...customData, targetAudience: e.target.value })}
-                      className="bg-background/50 text-right"
-                      dir="rtl"
-                      data-testid="input-target-audience"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="goal">الهدف *</Label>
+                    <Label htmlFor="goal">هدف الحملة *</Label>
                     <Select
                       value={customData.goal}
                       onValueChange={(value) => setCustomData({ ...customData, goal: value })}
                     >
                       <SelectTrigger className="bg-background/50">
-                        <SelectValue placeholder="اختر الهدف" />
+                        <SelectValue placeholder="اختر هدف الحملة" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="awareness">زيادة الوعي</SelectItem>
-                        <SelectItem value="sales">زيادة المبيعات</SelectItem>
-                        <SelectItem value="traffic">زيادة الزيارات</SelectItem>
-                        <SelectItem value="engagement">زيادة التفاعل</SelectItem>
-                        <SelectItem value="downloads">زيادة التحميلات</SelectItem>
+                        {campaignGoals.map((goal) => (
+                          <SelectItem key={goal.value} value={goal.value}>{goal.label}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -586,15 +670,8 @@ export default function CampaignBrain() {
 
               <div className="space-y-3">
                 <Label>المنصة المستهدفة {mode === 'custom' && '*'}</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { id: 'instagram', label: 'انستقرام' },
-                    { id: 'twitter', label: 'تويتر / X' },
-                    { id: 'tiktok', label: 'تيك توك' },
-                    { id: 'snapchat', label: 'سناب شات' },
-                    { id: 'youtube', label: 'يوتيوب' },
-                    { id: 'google', label: 'قوقل أدز' },
-                  ].map((platform) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {adPlatforms.map((platform) => (
                     <div key={platform.id} className="flex items-center gap-2">
                       <Checkbox
                         id={`platform-${platform.id}`}
@@ -632,51 +709,72 @@ export default function CampaignBrain() {
               {mode === 'full' && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="budget">الميزانية (ريال) - اختياري</Label>
-                    <Input
-                      id="budget"
-                      type="number"
-                      placeholder="سيُستخدم النطاق من التحليل"
-                      value={formData.budget}
-                      onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                      className="bg-background/50"
-                      data-testid="input-budget"
-                    />
+                    <Label htmlFor="budget">نطاق الميزانية الشهرية - اختياري</Label>
+                    <Select value={formData.budget} onValueChange={(value) => setFormData({ ...formData, budget: value })}>
+                      <SelectTrigger className="bg-background/50" data-testid="select-budget">
+                        <SelectValue placeholder="سيُستخدم النطاق من التحليل" />
+                      </SelectTrigger>
+                      <SelectContent>{budgetRanges.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="duration">المدة (أيام) - اختياري</Label>
-                    <Input
-                      id="duration"
-                      type="number"
-                      placeholder="مثال: 30"
-                      value={formData.duration}
-                      onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                      className="bg-background/50"
-                      data-testid="input-duration"
-                    />
+                    <Label htmlFor="duration">مدة الحملة - اختياري</Label>
+                    <Select value={formData.duration} onValueChange={(value) => setFormData({ ...formData, duration: value })}>
+                      <SelectTrigger className="bg-background/50" data-testid="select-duration">
+                        <SelectValue placeholder="اختر مدة الحملة" />
+                      </SelectTrigger>
+                      <SelectContent>{campaignDurations.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="season">الموسم التسويقي - اختياري</Label>
+                    <Select value={formData.season} onValueChange={(value) => setFormData({ ...formData, season: value })}>
+                      <SelectTrigger className="bg-background/50" data-testid="select-season">
+                        <SelectValue placeholder="اختر الموسم" />
+                      </SelectTrigger>
+                      <SelectContent>{marketingSeasons.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                    </Select>
                   </div>
                 </>
               )}
 
               {mode === 'custom' && (
-                <div className="space-y-2">
-                  <Label htmlFor="custom-budget">الميزانية الشهرية (اختياري)</Label>
-                  <Input
-                    id="custom-budget"
-                    placeholder="مثال: 5000 ريال"
-                    value={customData.budget}
-                    onChange={(e) => setCustomData({ ...customData, budget: e.target.value })}
-                    className="bg-background/50 text-right"
-                    dir="rtl"
-                    data-testid="input-custom-budget"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="custom-budget">نطاق الميزانية الشهرية</Label>
+                    <Select value={customData.budget} onValueChange={(value) => setCustomData({ ...customData, budget: value })}>
+                      <SelectTrigger className="bg-background/50" data-testid="select-custom-budget">
+                        <SelectValue placeholder="اختر الميزانية" />
+                      </SelectTrigger>
+                      <SelectContent>{budgetRanges.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="custom-duration">مدة الحملة</Label>
+                    <Select value={customData.duration} onValueChange={(value) => setCustomData({ ...customData, duration: value })}>
+                      <SelectTrigger className="bg-background/50" data-testid="select-custom-duration">
+                        <SelectValue placeholder="اختر المدة" />
+                      </SelectTrigger>
+                      <SelectContent>{campaignDurations.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="custom-season">الموسم التسويقي</Label>
+                    <Select value={customData.season} onValueChange={(value) => setCustomData({ ...customData, season: value })}>
+                      <SelectTrigger className="bg-background/50" data-testid="select-custom-season">
+                        <SelectValue placeholder="اختر الموسم" />
+                      </SelectTrigger>
+                      <SelectContent>{marketingSeasons.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
                 </div>
               )}
 
               <Button
-                type="submit"
-                disabled={isLoading || (mode === 'full' ? !selectedAnalysisId : (!customData.businessType || !customData.goal))}
+                onClick={mode === 'full' ? handleGenerate : handleGenerateCustom}
+                disabled={isLoading || (mode === 'full' ? !selectedAnalysisId : (!customData.businessType || !customData.ageRange || !customData.gender || !customData.socialSegment || !customData.region || !customData.goal || customData.platforms.length === 0))}
                 className="w-full bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white h-12 rounded-xl text-base flex flex-row-reverse"
                 data-testid="button-generate"
               >

@@ -630,8 +630,11 @@ export async function processWithBrain(request: BrainRequest): Promise<BrainResp
       const inputs = request.inputs;
       const filledFieldsCount = [
         inputs.businessType,
-        inputs.targetAudience,
-        inputs.goal,
+        inputs.targetAudience || inputs.ageRange,
+        inputs.gender,
+        inputs.socialSegment,
+        inputs.region,
+        inputs.goal || inputs.objective,
         inputs.platforms?.length > 0,
         inputs.budget,
       ].filter(Boolean).length;
@@ -643,12 +646,18 @@ export async function processWithBrain(request: BrainRequest): Promise<BrainResp
 معطيات العميل (وضع المعطيات الموجّه)
 ═══════════════════════════════════════════════════════════════
 📂 نوع النشاط: ${inputs.businessType || 'غير محدد'} ← مطلوب
-👥 الفئة المستهدفة: ${inputs.targetAudience || 'غير محدد'} ← مطلوب
-🎯 الهدف: ${inputs.goal || 'غير محدد'} ← مطلوب
+👥 الفئة العمرية: ${inputs.ageRange || 'غير محدد'}
+⚥ الجنس: ${inputs.gender || 'غير محدد'}
+💼 الفئة الاجتماعية/المهنية: ${inputs.socialSegment || 'غير محدد'}
+📍 المنطقة: ${inputs.region || 'غير محدد'}
+🎯 الهدف: ${inputs.goal || inputs.objective || 'غير محدد'} ← مطلوب
 📱 المنصة: ${inputs.platforms?.length > 0 ? inputs.platforms.join('، ') : 'غير محدد'} ← مطلوب
 💰 الميزانية: ${inputs.budget || 'غير محدد'} ← اختياري
+⏱️ مدة الحملة: ${inputs.duration || 'غير محدد'}
+📅 الموسم التسويقي: ${inputs.season || 'غير محدد'}
+⭐ الاهتمامات: ${inputs.interests?.length > 0 ? inputs.interests.join('، ') : 'غير محدد'}
 
-📊 مستوى الثقة المتوقع: ${confidenceHint} (بناءً على اكتمال ${filledFieldsCount}/5 حقول)
+📊 مستوى الثقة المتوقع: ${confidenceHint} (بناءً على اكتمال ${filledFieldsCount}/8 حقول)
 
 ⚠️ تذكير: اربط النتائج مباشرة بهذه المعطيات فقط.
 لا تفترض أي معلومات إضافية عن الموقع أو المتجر.
@@ -869,12 +878,19 @@ function buildToolUserMessage(tool: string, inputs: Record<string, any>, context
 function buildGuidedUserMessage(inputs: Record<string, any>, tool: string = 'campaign_brain_guided'): string {
   const goalMap: Record<string, string> = {
     awareness: 'زيادة الوعي بالعلامة التجارية',
+    brand_awareness: 'زيادة الوعي بالعلامة التجارية',
     sales: 'زيادة المبيعات',
+    sales_conversions: 'زيادة المبيعات/التحويلات',
     traffic: 'زيادة الزيارات',
+    followers_engagement: 'زيادة المتابعين والتفاعل',
     engagement: 'زيادة التفاعل مع الجمهور',
     conversion: 'زيادة التحويلات والمبيعات',
     retention: 'الاحتفاظ بالعملاء الحاليين',
     downloads: 'زيادة تحميلات التطبيق',
+    leads: 'جلب عملاء محتملين',
+    promotion: 'الترويج لعرض/خصم',
+    launch: 'إطلاق منتج/خدمة جديدة',
+    retargeting: 'تذكير وإعادة استهداف',
   };
 
   const budgetMap: Record<string, string> = {
@@ -882,15 +898,28 @@ function buildGuidedUserMessage(inputs: Record<string, any>, tool: string = 'cam
     medium: '5,000 - 20,000 ريال',
     high: '20,000 - 50,000 ريال',
     unlimited: 'أكثر من 50,000 ريال',
+    lt_1000: 'أقل من 1,000 ريال',
+    '1000_3000': '1,000 - 3,000 ريال',
+    '3000_7000': '3,000 - 7,000 ريال',
+    '7000_15000': '7,000 - 15,000 ريال',
+    '15000_30000': '15,000 - 30,000 ريال',
+    '30000_50000': '30,000 - 50,000 ريال',
+    gt_50000: 'أكثر من 50,000 ريال',
+    open: 'مفتوح / حسب الحاجة',
   };
 
   const platformMap: Record<string, string> = {
     instagram: 'انستقرام',
+    instagram_meta: 'Instagram/Meta',
     twitter: 'تويتر / X',
+    twitter_x: 'Twitter/X',
     tiktok: 'تيك توك',
     snapchat: 'سناب شات',
     youtube: 'يوتيوب',
     google: 'قوقل أدز',
+    google_ads: 'Google Ads',
+    linkedin: 'LinkedIn',
+    multi: 'متعدد',
   };
 
   const platformNames = inputs.platforms?.map((p: string) => platformMap[p] || p).join('، ') || 'غير محدد';
