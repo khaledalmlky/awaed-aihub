@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/app-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -93,6 +92,25 @@ interface PlanResult {
   };
 }
 
+interface PlannerFormData {
+  businessType: string;
+  ageRange: string;
+  gender: string;
+  socialSegment: string;
+  region: string;
+  interests: string[];
+  budget: string;
+  duration: string;
+  objective: string;
+  season: string;
+  platforms: string[];
+}
+
+interface SubmittedPlannerData extends PlannerFormData {
+  goal: string;
+  targetAudience: string;
+}
+
 interface Analysis {
   id: number;
   businessName: string | null;
@@ -120,6 +138,10 @@ const formatValue = (value?: number | string) => {
   return typeof value === 'number' ? value.toLocaleString('ar-SA') : value;
 };
 
+const getErrorMessage = (error: unknown, fallback: string) => {
+  return error instanceof Error ? error.message : fallback;
+};
+
 type Mode = 'full' | 'custom';
 
 export default function CampaignPlanner() {
@@ -129,11 +151,13 @@ export default function CampaignPlanner() {
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<number | null>(null);
   const [clientContext, setClientContext] = useState<ClientContext | null>(null);
   const [plannerContext, setPlannerContext] = useState<PlannerContext | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<PlannerFormData>({
     businessType: '',
     ageRange: '',
     gender: '',
+    socialSegment: '',
     region: '',
+    interests: [],
     budget: '',
     duration: '',
     objective: '',
@@ -239,15 +263,26 @@ export default function CampaignPlanner() {
     });
   };
 
-  const buildSubmittedData = () => JSON.parse(JSON.stringify({
+  const handleInterestToggle = (interestId: string, checked: boolean | 'indeterminate') => {
+    setFormData({
+      ...formData,
+      interests: checked
+        ? [...formData.interests, interestId]
+        : formData.interests.filter((interest) => interest !== interestId),
+    });
+  };
+
+  const buildSubmittedData = (): SubmittedPlannerData => ({
     ...formData,
     goal: formData.objective,
     targetAudience: [
       optionLabel(ageRanges, formData.ageRange),
       optionLabel(genders, formData.gender),
+      optionLabel(socialSegments, formData.socialSegment),
       optionLabel(regions, formData.region),
+      ...formData.interests.map((interest) => optionLabel(interests, interest)),
     ].filter(Boolean).join(' • '),
-  }));
+  });
 
   const validateForm = () => {
     if (mode === 'full' && !selectedAnalysisId) {
@@ -255,8 +290,8 @@ export default function CampaignPlanner() {
       return false;
     }
 
-    if (!formData.businessType || !formData.ageRange || !formData.gender || !formData.region || !formData.budget || !formData.duration || !formData.objective || !formData.season || formData.platforms.length === 0) {
-      setError('يرجى تعبئة جميع الحقول المطلوبة: النشاط، الجمهور، الميزانية، المدة، الهدف، الموسم، والمنصات');
+    if (!formData.businessType || !formData.ageRange || !formData.gender || !formData.socialSegment || !formData.region || !formData.budget || !formData.duration || !formData.objective || !formData.season || formData.platforms.length === 0) {
+      setError('يرجى تعبئة جميع الحقول المطلوبة: النشاط، الجمهور، الفئة، المنطقة، الميزانية، المدة، الهدف، الموسم، والمنصات');
       return false;
     }
 
@@ -329,8 +364,8 @@ export default function CampaignPlanner() {
       } else {
         setError('لم يتم استلام خطة صالحة');
       }
-    } catch (err: any) {
-      setError(err.message || 'حدث خطأ أثناء إنشاء الخطة');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'حدث خطأ أثناء إنشاء الخطة'));
     } finally {
       setIsLoading(false);
       setLoadingStep(0);
@@ -578,11 +613,36 @@ export default function CampaignPlanner() {
                     </Select>
                   </div>
                   <div className="space-y-2">
+                    <Label>الفئة الاجتماعية/المهنية *</Label>
+                    <Select value={formData.socialSegment} onValueChange={(value) => setFormData({ ...formData, socialSegment: value })}>
+                      <SelectTrigger className="bg-background/50"><SelectValue placeholder="اختر الفئة" /></SelectTrigger>
+                      <SelectContent>{socialSegments.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
                     <Label>المنطقة الجغرافية *</Label>
                     <Select value={formData.region} onValueChange={(value) => setFormData({ ...formData, region: value })}>
                       <SelectTrigger className="bg-background/50"><SelectValue placeholder="اختر المنطقة" /></SelectTrigger>
                       <SelectContent>{regions.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
                     </Select>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <Label>الاهتمامات (اختياري)</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {interests.map((interest) => (
+                      <div key={interest.id} className="flex items-center gap-2">
+                        <Checkbox
+                          id={`planner-interest-${interest.id}`}
+                          checked={formData.interests.includes(interest.id)}
+                          onCheckedChange={(checked) => handleInterestToggle(interest.id, checked)}
+                          data-testid={`checkbox-interest-${interest.id}`}
+                        />
+                        <Label htmlFor={`planner-interest-${interest.id}`} className="text-sm cursor-pointer">
+                          {interest.label}
+                        </Label>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -648,11 +708,9 @@ export default function CampaignPlanner() {
                 )}
               </div>
 
-              <Input type="hidden" value={socialSegments.length + interests.length} readOnly aria-hidden="true" />
-
               <Button
                 type="submit"
-                disabled={isLoading || (mode === 'full' && !selectedAnalysisId) || !formData.businessType || !formData.ageRange || !formData.gender || !formData.region || !formData.budget || !formData.duration || !formData.objective || !formData.season || formData.platforms.length === 0}
+                disabled={isLoading || (mode === 'full' && !selectedAnalysisId) || !formData.businessType || !formData.ageRange || !formData.gender || !formData.socialSegment || !formData.region || !formData.budget || !formData.duration || !formData.objective || !formData.season || formData.platforms.length === 0}
                 className="w-full bg-gradient-to-l from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white h-12 rounded-xl text-base flex flex-row-reverse"
                 data-testid="button-plan"
               >
