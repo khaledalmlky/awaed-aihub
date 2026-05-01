@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar, Sparkles, AlertTriangle, Target, DollarSign, TrendingUp, Users, Loader2, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
+import { Calendar, Sparkles, AlertTriangle, Target, DollarSign, TrendingUp, Users, Loader2, CheckCircle2, XCircle, Trash2, MousePointer } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -19,9 +19,17 @@ import {
   marketingSeasons,
   regions,
 } from '@/lib/marketing-options';
+import { ExecutiveSummary, NextStepsTimeline, ReportStatGrid, ToolModeTabs } from '@/components/ai/tool-report-widgets';
 
 interface PlanResult {
   readyToLaunch: boolean;
+  decision?: {
+    verdict?: string;
+    reason?: string;
+    action?: string;
+  };
+  executiveSummary?: string;
+  nextSteps?: string[];
   preparationNeeded?: string[];
   plan: {
     totalBudget: number;
@@ -59,6 +67,8 @@ interface Analysis {
   createdAt: string;
 }
 
+type PlannerMode = 'quick' | 'detailed';
+
 const formatAnalysisLabel = (analysis: Analysis): string => {
   const name = analysis.businessName || analysis.url;
   const score = analysis.overallScore || '0';
@@ -72,12 +82,14 @@ const formatAnalysisLabel = (analysis: Analysis): string => {
 };
 
 export default function CampaignPlanner() {
+  const [plannerMode, setPlannerMode] = useState<PlannerMode>('quick');
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<number | null>(null);
   const [clientContext, setClientContext] = useState<ClientContext | null>(null);
   const [formData, setFormData] = useState({
     businessType: '',
     region: '',
+    targetAudience: '',
     budget: '',
     duration: '',
     objective: '',
@@ -147,7 +159,11 @@ export default function CampaignPlanner() {
   };
 
   const handlePlan = async () => {
-    if (!formData.businessType || !formData.region || !formData.objective || !formData.budget || !formData.duration) {
+    if (plannerMode === 'detailed' && !selectedAnalysisId) {
+      setError('يرجى اختيار تحليل سابق أو إجراء تحليل جديد');
+      return;
+    }
+    if (plannerMode === 'quick' && (!formData.businessType || !formData.region || !formData.objective || !formData.budget || !formData.duration)) {
       setError('يرجى تعبئة نوع النشاط، المنطقة، الهدف، الميزانية، ومدة الحملة');
       return;
     }
@@ -161,7 +177,7 @@ export default function CampaignPlanner() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          analysisId: selectedAnalysisId || undefined,
+          analysisId: plannerMode === 'detailed' ? selectedAnalysisId : undefined,
           inputs: formData,
         }),
       });
@@ -204,16 +220,30 @@ export default function CampaignPlanner() {
 
   return (
     <AppLayout>
-      <div className="space-y-10 lg:space-y-14">
-        <div className="flex items-center gap-5">
+      <div className="space-y-10 lg:space-y-14 text-right" dir="rtl">
+        <div className="flex flex-row-reverse items-center gap-5">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-xl">
             <Calendar className="w-8 h-8 text-white" strokeWidth={1.5} />
           </div>
           <div>
             <h1 className="text-3xl lg:text-4xl font-bold">مخطط الحملات</h1>
-            <p className="text-muted-foreground text-lg mt-2">تخطيط الميزانية والمؤشرات بناءً على تحليل عميلك</p>
+            <p className="text-muted-foreground text-lg mt-2">
+              {plannerMode === 'detailed' ? 'تخطيط الميزانية والمؤشرات بناءً على تحليل عميلك' : 'خطة سريعة مبنية على البيانات اللي تدخلها'}
+            </p>
           </div>
         </div>
+
+        <ToolModeTabs
+          value={plannerMode}
+          hasAnalyses={analyses.length > 0}
+          onValueChange={(value) => {
+            setPlannerMode(value);
+            setResult(null);
+            setError(null);
+            if (value === 'quick') setClientContext(null);
+            if (value === 'detailed' && selectedAnalysisId) fetchContext(selectedAnalysisId);
+          }}
+        />
 
         {clientContext && (
           <Card className={`border-0 ${clientContext.shouldAdvertise ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-amber-500/10 border border-amber-500/20'}`}>
@@ -253,10 +283,36 @@ export default function CampaignPlanner() {
         )}
 
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_1.3fr] gap-8 lg:gap-12">
-          <div className="bg-card/50 rounded-2xl p-6 lg:p-8 border border-border/30">
+          <div className="bg-card/50 rounded-2xl p-6 lg:p-8 border border-border/30" dir="rtl">
             <h2 className="text-xl font-semibold mb-2">تفاصيل الحملة</h2>
             <p className="text-muted-foreground mb-6">اختر العميل وخصص إعدادات الحملة</p>
             <div className="space-y-5">
+              {plannerMode === 'quick' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>نوع النشاط *</Label>
+                    <Input
+                      placeholder="مثال: مطعم، متجر إلكتروني، خدمات"
+                      value={formData.businessType}
+                      onChange={(e) => setFormData({ ...formData, businessType: e.target.value })}
+                      className="bg-background/50 text-right"
+                      dir="rtl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>الفئة المستهدفة</Label>
+                    <Input
+                      placeholder="مثال: رجال 25-40 في الرياض"
+                      value={formData.targetAudience}
+                      onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value })}
+                      className="bg-background/50 text-right"
+                      dir="rtl"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {plannerMode === 'detailed' && (
               <div className="space-y-2">
                 <Label>اختر العميل</Label>
                 <div className="flex gap-2">
@@ -303,6 +359,7 @@ export default function CampaignPlanner() {
                   )}
                 </div>
               </div>
+              )}
 
               <div className="space-y-2">
                 <Label>نوع النشاط</Label>
@@ -403,7 +460,7 @@ export default function CampaignPlanner() {
 
               <Button
                 onClick={handlePlan}
-                disabled={isLoading}
+                disabled={isLoading || (plannerMode === 'detailed' ? !selectedAnalysisId : (!formData.businessType || !formData.region || !formData.objective || !formData.budget || !formData.duration))}
                 className="w-full bg-gradient-to-l from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white h-12 rounded-xl text-base"
                 data-testid="button-plan"
               >
@@ -468,7 +525,22 @@ export default function CampaignPlanner() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="space-y-5"
+                  dir="rtl"
                 >
+                  <ExecutiveSummary
+                    icon={Calendar}
+                    title="ملخص خطة الحملة"
+                    summary={result.decision?.reason || result.plan.objective || 'يوجد تصور عملي للميزانية والمراحل ومؤشرات القياس.'}
+                    badge={result.readyToLaunch ? 'جاهز للإطلاق' : 'يحتاج تجهيز'}
+                  />
+                  <ReportStatGrid
+                    items={[
+                      { icon: DollarSign, label: 'الميزانية', value: `${result.plan.totalBudget?.toLocaleString?.() || result.plan.totalBudget} ر.س`, tone: 'blue' },
+                      { icon: TrendingUp, label: 'ROAS المتوقع', value: result.plan.expectedROAS || '3x', tone: 'green' },
+                      { icon: Users, label: 'الوصول', value: result.plan.expectedReach, tone: 'purple' },
+                      { icon: Target, label: 'التحويلات', value: result.plan.expectedConversions, tone: 'amber' },
+                    ]}
+                  />
                   {!result.readyToLaunch && result.preparationNeeded && result.preparationNeeded.length > 0 && (
                     <Card className="border-amber-500/20 bg-amber-500/10">
                       <CardHeader className="pb-2">
@@ -490,7 +562,21 @@ export default function CampaignPlanner() {
                     </Card>
                   )}
 
-                  <Card className="glass border-0">
+                  <ExecutiveSummary
+                    icon={Calendar}
+                    title="ملخص خطة الحملة"
+                    summary={result.decision?.reason || result.plan.objective || 'يوجد مسار إطلاق واضح بميزانية ومراحل ومؤشرات قابلة للقياس.'}
+                    badge={plannerMode === 'detailed' ? 'تحليل مفصل' : 'تحليل سريع'}
+                  />
+                  <ReportStatGrid
+                    items={[
+                      { icon: DollarSign, label: 'الميزانية', value: `${result.plan.totalBudget?.toLocaleString()} ر.س`, tone: 'blue' },
+                      { icon: Users, label: 'الوصول', value: result.plan.expectedReach, tone: 'green' },
+                      { icon: Target, label: 'النقرات', value: result.plan.expectedClicks, tone: 'purple' },
+                      { icon: TrendingUp, label: 'العائد', value: result.plan.expectedROAS || '3x', tone: 'amber' },
+                    ]}
+                  />
+                  <Card className="glass border-0" dir="rtl">
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-lg">ملخص الخطة</CardTitle>
@@ -604,6 +690,10 @@ export default function CampaignPlanner() {
                           </ul>
                         </div>
                       )}
+                      <NextStepsTimeline
+                        steps={result.plan.recommendations || result.preparationNeeded}
+                        onCopy={() => navigator.clipboard.writeText(JSON.stringify(result, null, 2))}
+                      />
                     </CardContent>
                   </Card>
                 </motion.div>

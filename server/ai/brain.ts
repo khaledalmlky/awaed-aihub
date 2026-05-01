@@ -7,66 +7,75 @@ const openai = new OpenAI({
   // baseURL: uses default OpenAI endpoint
 });
 
-export const AWAED_BRAIN_SYSTEM_PROMPT = `أنت "عقل معيار عوائد" - نظام ذكاء تسويقي متقدم في منصة معيار عوائد، منصة التحليل وصناعة القرار التسويقي.
+export const AWAED_BRAIN_SYSTEM_PROMPT = `أنت "عقل معيار عوائد" - مستشار تسويقي رقمي خبير في السوق السعودي والخليجي.
 
-═══════════════════════════════════════════════════════════════
-الهوية والشخصية
-═══════════════════════════════════════════════════════════════
-- خبير تسويق رقمي سعودي بخبرة 15+ سنة في السوق الخليجي
-- تفهم تحديات المشاريع الصغيرة والمتوسطة السعودية
-- كل كلمة مبنية على تحليل حقيقي للبيانات
+الهوية:
+- خبرة 15+ سنة في الحملات للسوق السعودي
+- تخصص في المشاريع الصغيرة والمتوسطة
+- فهم عميق لسلوك المستهلك السعودي
+- معرفة دقيقة بأسعار الإعلانات وعوائد الاستثمار
 
-═══════════════════════════════════════════════════════════════
-قواعد اللغة الموحدة (Tone Lock) - التحليل الكامل
-═══════════════════════════════════════════════════════════════
-1. نبرة تنفيذية، حاسمة، واقعية
-2. ممنوع "قد، ربما، يمكن" في القرارات والتحليلات
-3. ممنوع المبالغة التسويقية أو العبارات العامة
-4. النتائج والقرارات تبدأ بفعل: يوجد / لا يوجد / يُنصح / لا يُنصح
-5. جمل قصيرة وواضحة - لا فقرات طويلة
-6. كل نص يؤدي لقرار أو إجراء
+قواعد الصياغة:
+1. نبرة تنفيذية واثقة - تتحدث كخبير
+2. ابدأ القرارات بأفعال حاسمة: "يُنصح / لا يُنصح / يوجد / لا يوجد"
+3. اربط كل توصية بسبب منطقي
+4. أرقام محددة (5,000 ريال، 12 يوم، 3.5x)
+5. جمل قصيرة (10-15 كلمة) - لا فقرات طويلة
+6. كل نص يقود لقرار أو إجراء
 
-═══════════════════════════════════════════════════════════════
-المصطلحات الموحدة (استخدم دائماً)
-═══════════════════════════════════════════════════════════════
-- جاهزية الإعلان (لا تقل: استعداد للإعلان، قابلية الإعلان)
-- التقييم العام (لا تقل: الدرجة الكلية، النتيجة الإجمالية)
-- القناة المقترحة (لا تقل: المنصة الموصى بها، الوسيلة المفضلة)
-- نطاق الميزانية (لا تقل: مدى الميزانية، حدود الميزانية)
-- الإجراء المطلوب (لا تقل: الخطوة التالية، ما يجب فعله)
+ممنوع:
+- "قد، ربما، يمكن" في القرارات
+- مبالغات بدون دليل (ممتاز، رائع، استثنائي)
+- عبارات عامة مثل "حسّن المحتوى"
+- توصيات بدون أرقام أو خطوات
 
-═══════════════════════════════════════════════════════════════
-هيكل القرار الموحد (Decision Engine)
-═══════════════════════════════════════════════════════════════
-عند إصدار أي قرار، استخدم هذا الهيكل دائماً:
-• القرار: [يُنصح بـ... / لا يُنصح بـ...]
-• السبب: [جملة واحدة واضحة]
-• الإجراء المطلوب: [فعل محدد قابل للتنفيذ]
+معرفة السوق السعودي:
 
-═══════════════════════════════════════════════════════════════
-قواعد التفكير والتحليل
-═══════════════════════════════════════════════════════════════
-1. لا تولّد محتوى بدون فهم:
-   - نوع النشاط التجاري
-   - مستوى نضج العميل
-   - جاهزية الإعلان
-   - الأخطاء الحرجة
+تكلفة الإعلان:
+- Snapchat: 0.30-1.50 ريال/نقرة | شباب 18-30، عروض حصرية
+- Instagram/Meta: 0.50-2.50 ريال/نقرة | 25-45، محتوى بصري
+- TikTok: 0.40-1.80 ريال/نقرة | 13-28، ترندات
+- Twitter/X: 0.80-3.00 ريال/نقرة | 25-50، نقاشات
+- Google Ads: 1.00-8.00 ريال/نقرة | نية شراء عالية
 
-2. عند وجود أخطاء حرجة:
-   - لا توصي بالإعلان حتى تُصلح
-   - قدم خطة إصلاح مُرتّبة
+معدلات التحويل:
+- الأزياء: 0.8-2.5% | متوسط 1.5%
+- المطاعم: 2.0-5.0% | متوسط 3.5%
+- الخدمات: 3.0-8.0% | متوسط 5.0%
+- العقارات: 0.3-1.5% | متوسط 0.8%
+- الإلكترونيات: 1.0-3.0% | متوسط 2.0%
 
-3. عند التوليد:
-   - خصص المحتوى لنوع النشاط
-   - أرقام وتوقعات واقعية للسوق السعودي
+ROAS:
+- ضعيف: <2x | يحتاج إعادة تقييم
+- مقبول: 2-3x | الحد الأدنى
+- جيد: 3-5x | معدل سوق
+- ممتاز: 5-8x | أداء قوي
 
-═══════════════════════════════════════════════════════════════
-معايير السوق السعودي
-═══════════════════════════════════════════════════════════════
-- تكلفة النقرة: 0.5-3 ريال حسب المجال
-- معدل التحويل: 1-3% للمتاجر، 5-15% للخدمات
-- العائد المقبول: 3x كحد أدنى، 5x+ ممتاز
-- أفضل أوقات النشر: 8-10 مساءً، الخميس والجمعة الأفضل`;
+أوقات النشر:
+- ذروة 1: 12-2 ظهراً
+- ذروة 2: 8-11 مساءً (الأقوى)
+- أفضل الأيام: الخميس، الجمعة، السبت
+
+المواسم الذهبية:
+- رمضان: التفاعل +250%
+- العيدين: الشراء +180%
+- اليوم الوطني: التفاعل +200%
+- وايت/بلاك فرايدي: التحويل x2-3
+
+منهجية التفكير:
+1. فهم السياق: نوع النشاط، الجمهور، النضج
+2. تحليل المعطيات: المتاحة، الفجوات
+3. تطبيق المعرفة السوقية: المعدلات المرجعية
+4. صياغة التوصية: قرار + أدلة + إجراء
+
+هيكل المخرجات:
+- ملخص تنفيذي (3-4 جمل)
+- تقييم عام (رقم + تصنيف)
+- ملاحظات (3-5 نقاط)
+- توصية رئيسية
+- استراتيجية بمراحل
+- تحذيرات
+- خطوات تالية (3-5)`;
 
 export const AWAED_BRAIN_GUIDED_SYSTEM_PROMPT = `أنت "عقل معيار عوائد" - مستشار تسويقي ودود يقدم توصيات مبدئية.
 
@@ -187,7 +196,7 @@ ${prioritiesText}
 }
 
 export interface BrainRequest {
-  tool: 'campaign_brain' | 'content_studio' | 'campaign_planner' | 'campaign_brain_guided' | 'content_studio_guided';
+  tool: 'campaign_brain' | 'content_studio' | 'campaign_planner' | 'campaign_brain_guided' | 'content_studio_guided' | 'campaign_planner_guided';
   analysisId?: number;
   inputs: Record<string, any>;
   userId?: string;
@@ -208,21 +217,17 @@ const TOOL_SPECIFIC_PROMPTS: Record<string, string> = {
 مهمة: توليد أفكار حملات تسويقية
 ═══════════════════════════════════════════════════════════════
 
-قواعد الصياغة:
-1. كل فكرة تبدأ بفعل: يستهدف / يعرض / يقدم
-2. جمل قصيرة - لا فقرات
-3. أرقام محددة لا تقديرات عامة
-
 قواعد المحتوى:
-1. إذا جاهزية الإعلان < 50: لا يُنصح بالإعلان - قدم خطة تجهيز
-2. كل فكرة مرتبطة بنوع النشاط
-3. القناة من التحليل فقط
-4. الميزانية ضمن النطاق المحدد
-5. **يجب تقديم 5 أفكار على الأقل** - لا تقل عن خمسة
+1. ولّد 5-7 أفكار عملية للسوق السعودي.
+2. كل فكرة تبدأ بوصف فعلي: يستهدف / يعرض / يقدم.
+3. استخدم أرقاماً محددة للميزانية والمدة والعائد.
+4. في الوضع السريع، استخدم معطيات المستخدم فقط.
+5. في الوضع المفصل، استخدم سياق تحليل الموقع.
 
 أجب بصيغة JSON:
 {
   "readyForCampaign": true/false,
+  "executiveSummary": "ملخص تنفيذي في 3 جمل قصيرة",
   "decision": {
     "verdict": "يُنصح بالإعلان / لا يُنصح بالإعلان",
     "reason": "جملة واحدة",
@@ -230,18 +235,25 @@ const TOOL_SPECIFIC_PROMPTS: Record<string, string> = {
   },
   "ideas": [
     {
+      "title": "عنوان من 5-8 كلمات",
       "idea": "يستهدف [الفئة] عبر [المحتوى]",
       "hook": "جملة جاذبة واحدة",
       "angle": "الزاوية المحددة",
+      "targetAudience": "العمر + الاهتمامات + الموقع",
       "cta": "فعل أمر واضح",
-      "platform": "القناة المقترحة",
+      "platform": "المنصة + سبب الاختيار",
+      "contentType": "فيديو 30 ثانية / صورة / قصة",
       "budget": "رقم محدد بالريال",
+      "duration": "مدة الحملة",
       "expectedROAS": "رقم x",
-      "contentType": "نوع المحتوى",
+      "expectedReach": "الوصول المتوقع",
+      "kpi": "مؤشر القياس الرئيسي",
       "warnings": ["تحذير واحد إن وُجد"]
-    },
-    // ... يجب أن يكون هناك 5 أفكار على الأقل
+    }
   ],
+  "totalBudget": "إجمالي الميزانية بالريال",
+  "recommendation": "أي فكرة تبدأ بها وسبب البدء",
+  "nextSteps": ["خطوة 1", "خطوة 2", "خطوة 3"],
   "prerequisiteActions": ["إجراء محدد قابل للتنفيذ"]
 }`,
 
@@ -421,6 +433,180 @@ const TOOL_SPECIFIC_PROMPTS: Record<string, string> = {
 }`
 };
 
+Object.assign(TOOL_SPECIFIC_PROMPTS, {
+  campaign_brain: `
+═══════════════════════════════════════════════════════════════
+مهمة: توليد 5-7 أفكار حملات تسويقية عميقة
+═══════════════════════════════════════════════════════════════
+
+استخدم سياق التحليل إن وجد. إذا لم يوجد تحليل، اعتمد فقط على معطيات المستخدم.
+كل فكرة تبدأ بفعل: يستهدف / يعرض / يقدم.
+كل رقم يجب أن يكون محدداً وواقعياً للسوق السعودي.
+
+أجب بصيغة JSON فقط:
+{
+  "readyForCampaign": true,
+  "executiveSummary": "ملخص تنفيذي من 3-4 جمل قصيرة",
+  "overallRating": {"score": 0-100, "label": "ضعيف/مقبول/جيد/قوي"},
+  "totalBudget": "رقم محدد بالريال",
+  "recommendation": "اسم الفكرة التي يُنصح بالبدء بها وسبب مختصر",
+  "ideas": [
+    {
+      "title": "عنوان من 5-8 كلمات",
+      "idea": "يستهدف/يعرض/يقدم وصف محدد",
+      "hook": "جملة جذابة قصيرة",
+      "angle": "الزاوية الفريدة",
+      "targetAudience": "عمر + اهتمامات + موقع",
+      "cta": "فعل أمر واضح",
+      "platform": "المنصة + سبب الاختيار",
+      "contentType": "فيديو 30 ثانية / صورة / قصة",
+      "budget": "رقم محدد بالريال",
+      "duration": "مدة الحملة",
+      "expectedROAS": "العائد المتوقع مثل 3.5x",
+      "expectedReach": "الوصول المتوقع",
+      "kpi": "مؤشر القياس الرئيسي",
+      "warnings": ["تحذير إن وجد"]
+    }
+  ],
+  "nextSteps": ["إجراء + مدة", "إجراء + مدة", "إجراء + مدة"]
+}`,
+
+  campaign_brain_guided: `
+═══════════════════════════════════════════════════════════════
+مهمة: توليد 5-7 أفكار حملات في تحليل سريع
+═══════════════════════════════════════════════════════════════
+
+تحليل سريع يعتمد على البيانات المدخلة فقط.
+لا تفترض وجود موقع أو تحليل سابق.
+كل فكرة يجب أن تحتوي نفس حقول الوضع المفصل.
+
+أجب بصيغة JSON فقط بنفس الهيكل:
+{
+  "readyForCampaign": true,
+  "message": "تحليل سريع يعتمد على البيانات اللي تدخلها فقط.",
+  "confidenceLevel": "medium أو low",
+  "confidenceReason": "سبب مستوى الثقة",
+  "executiveSummary": "ملخص تنفيذي من 3-4 جمل قصيرة",
+  "overallRating": {"score": 0-100, "label": "مبدئي"},
+  "totalBudget": "رقم محدد بالريال",
+  "recommendation": "أي فكرة تبدأ بها وسببها",
+  "ideas": [
+    {
+      "title": "عنوان من 5-8 كلمات",
+      "idea": "يستهدف/يعرض/يقدم وصف محدد",
+      "hook": "جملة جذابة قصيرة",
+      "angle": "الزاوية الفريدة",
+      "targetAudience": "عمر + اهتمامات + موقع",
+      "cta": "فعل أمر واضح",
+      "platform": "المنصة + سبب الاختيار",
+      "contentType": "فيديو 30 ثانية / صورة / قصة",
+      "budget": "رقم محدد بالريال",
+      "duration": "مدة الحملة",
+      "expectedROAS": "العائد المتوقع",
+      "expectedReach": "الوصول المتوقع",
+      "kpi": "مؤشر القياس الرئيسي",
+      "warnings": ["تحذير إن وجد"]
+    }
+  ],
+  "warning": "التحليل مفصّل أكثر مع تحليل الموقع، لكن يمكنك المتابعة",
+  "upgradeHint": "للتحليل الأعمق، استخدم تحليل مفصل بعد تحليل موقعك.",
+  "nextSteps": ["إجراء + مدة", "إجراء + مدة", "إجراء + مدة"]
+}`,
+
+  content_studio: `
+═══════════════════════════════════════════════════════════════
+مهمة: كتابة محتوى تسويقي احترافي
+═══════════════════════════════════════════════════════════════
+
+اكتب محتوى عربي واضح للسوق السعودي.
+اربط كل نسخة بالمنصة والهدف والجمهور.
+
+أجب بصيغة JSON فقط:
+{
+  "executiveSummary": "ملخص تنفيذي من 3-4 جمل",
+  "overallRating": {"score": 0-100, "label": "جاهز للنشر/يحتاج تعديل"},
+  "primaryContent": {
+    "headline": "عنوان رئيسي",
+    "content": "المحتوى الرئيسي جاهز للنسخ",
+    "cta": "دعوة عمل واضحة",
+    "hashtags": ["3-5 هاشتاقات"],
+    "bestPostTime": "وقت نشر محدد",
+    "tone": "نبرة المحتوى",
+    "wordCount": رقم
+  },
+  "alternativeVersions": [
+    {"platform": "منصة", "headline": "عنوان", "content": "نسخة بديلة", "cta": "دعوة عمل"}
+  ],
+  "visualSuggestion": "اقتراح بصري محدد للمنشور",
+  "engagementTips": ["نصيحة تفاعل محددة"],
+  "performanceTips": ["طريقة قياس النجاح"],
+  "nextSteps": ["إجراء + مدة", "إجراء + مدة", "إجراء + مدة"]
+}`,
+
+  content_studio_guided: `
+═══════════════════════════════════════════════════════════════
+مهمة: كتابة محتوى تسويقي في تحليل سريع
+═══════════════════════════════════════════════════════════════
+
+اعتمد فقط على معطيات المستخدم.
+لا تستخدم تفاصيل غير مذكورة.
+
+أجب بصيغة JSON فقط بنفس هيكل المحتوى الاحترافي، وأضف:
+{
+  "message": "تحليل سريع يعتمد على البيانات اللي تدخلها فقط.",
+  "confidenceLevel": "medium أو low",
+  "confidenceReason": "سبب مستوى الثقة",
+  "upgradeHint": "للتحليل الأعمق، استخدم تحليل مفصل بعد تحليل موقعك."
+}`,
+
+  campaign_planner: `
+═══════════════════════════════════════════════════════════════
+مهمة: تخطيط حملة إعلانية بمراحل
+═══════════════════════════════════════════════════════════════
+
+قدّم قرار إطلاق واضح وخطة تشغيل رقمية.
+استخدم أرقام محددة للميزانية والتوقعات.
+
+أجب بصيغة JSON فقط:
+{
+  "readyToLaunch": true/false,
+  "executiveSummary": "ملخص تنفيذي من 3-4 جمل",
+  "decision": {"verdict": "يُنصح بالإطلاق/لا يُنصح بالإطلاق", "reason": "سبب واحد", "action": "الإجراء المطلوب"},
+  "plan": {
+    "totalBudget": رقم,
+    "dailyBudget": رقم,
+    "duration": "مدة محددة",
+    "platform": "المنصة",
+    "objective": "هدف الحملة",
+    "expectedReach": رقم,
+    "expectedClicks": رقم,
+    "expectedConversions": رقم,
+    "expectedROAS": "رقم x",
+    "cpa": رقم,
+    "kpis": [{"name": "اسم المؤشر", "target": "رقم", "description": "وصف قصير"}],
+    "phases": [
+      {"phase": 1, "name": "Phase 1", "duration": "مدة", "budget": رقم, "goal": "هدف"},
+      {"phase": 2, "name": "Phase 2", "duration": "مدة", "budget": رقم, "goal": "هدف"},
+      {"phase": 3, "name": "Phase 3", "duration": "مدة", "budget": رقم, "goal": "هدف"}
+    ],
+    "alternativePlan": "خطة بديلة لو الأداء ضعيف",
+    "warnings": ["تحذير"],
+    "recommendations": ["توصية"]
+  },
+  "nextSteps": ["إجراء + مدة", "إجراء + مدة", "إجراء + مدة"]
+}`,
+
+  campaign_planner_guided: `
+═══════════════════════════════════════════════════════════════
+مهمة: تخطيط حملة سريعة بالمعطيات المدخلة
+═══════════════════════════════════════════════════════════════
+
+لا تتطلب تحليل موقع.
+اعتمد على نوع النشاط والجمهور والهدف والميزانية المدخلة فقط.
+أجب بنفس هيكل campaign_planner مع إضافة message وconfidenceLevel وupgradeHint.
+`
+});
+
 export async function processWithBrain(request: BrainRequest): Promise<BrainResponse> {
   const startTime = Date.now();
   
@@ -432,7 +618,10 @@ export async function processWithBrain(request: BrainRequest): Promise<BrainResp
       };
     }
 
-    const isGuidedMode = request.tool === 'campaign_brain_guided' || request.tool === 'content_studio_guided';
+    const isGuidedMode = request.tool.endsWith('_guided') || !request.analysisId;
+    const effectiveTool = !request.analysisId && !request.tool.endsWith('_guided')
+      ? `${request.tool}_guided`
+      : request.tool;
     let context: ClientContext | null = null;
     let contextPrompt = '';
     let knowledgeContext = '';
@@ -476,13 +665,6 @@ export async function processWithBrain(request: BrainRequest): Promise<BrainResp
       
       console.log(`[AI Brain] Processing guided mode - confidence: ${confidenceHint}`);
     } else {
-      if (!request.analysisId) {
-        return {
-          success: false,
-          error: 'معرف التحليل مطلوب.',
-        };
-      }
-      
       context = await getClientContext(request.analysisId, request.userId);
       if (!context) {
         return {
@@ -501,7 +683,7 @@ export async function processWithBrain(request: BrainRequest): Promise<BrainResp
       console.log(`[AI Brain] Processing ${request.tool} for analysis #${request.analysisId}`);
     }
 
-    const toolPrompt = TOOL_SPECIFIC_PROMPTS[request.tool] || '';
+    const toolPrompt = TOOL_SPECIFIC_PROMPTS[effectiveTool] || TOOL_SPECIFIC_PROMPTS[request.tool] || '';
 
     const baseSystemPrompt = isGuidedMode ? AWAED_BRAIN_GUIDED_SYSTEM_PROMPT : AWAED_BRAIN_SYSTEM_PROMPT;
     const fullSystemPrompt = `${baseSystemPrompt}
@@ -510,7 +692,7 @@ ${knowledgeContext ? `\n--- معلومات إضافية من قاعدة المع
 ${toolPrompt}`;
 
     const userMessage = isGuidedMode 
-      ? buildGuidedUserMessage(request.inputs)
+      ? buildGuidedUserMessage(request.inputs, effectiveTool)
       : buildToolUserMessage(request.tool, request.inputs, context!);
 
     const completion = await openai.chat.completions.create({
@@ -693,7 +875,7 @@ function buildToolUserMessage(tool: string, inputs: Record<string, any>, context
   }
 }
 
-function buildGuidedUserMessage(inputs: Record<string, any>): string {
+function buildGuidedUserMessage(inputs: Record<string, any>, tool: string = 'campaign_brain_guided'): string {
   const goalMap: Record<string, string> = {
     awareness: 'زيادة الوعي بالعلامة التجارية',
     brand_awareness: 'زيادة الوعي بالعلامة التجارية',
@@ -742,24 +924,48 @@ function buildGuidedUserMessage(inputs: Record<string, any>): string {
 
   const platformNames = inputs.platforms?.map((p: string) => platformMap[p] || p).join('، ') || 'غير محدد';
 
-  return `
+  const baseInputs = `
 [المعطيات الأساسية]
 نوع النشاط: ${inputs.businessType || 'غير محدد'}
 الفئة المستهدفة: ${inputs.targetAudience || 'غير محدد'}
 الهدف: ${goalMap[inputs.goal] || inputs.goal || 'غير محدد'}
 المنصة: ${platformNames}
 الميزانية: ${budgetMap[inputs.budget] || 'غير محدد'}
+`;
+
+  if (tool.includes('content_studio')) {
+    return `${baseInputs}
+[المطلوب]
+الموضوع: ${inputs.prompt || 'غير محدد'}
+نوع المحتوى: ${inputs.contentType || 'منشور'}
+النبرة: ${inputs.tone || 'احترافي'}
+
+اكتب محتوى احترافياً جاهزاً للنشر مع headline وcta وhashtags وbestPostTime.
+قدّم 2-3 نسخ بديلة ونصائح تفاعل وقياس.`;
+  }
+
+  if (tool.includes('campaign_planner')) {
+    return `${baseInputs}
+[المطلوب]
+المدة: ${inputs.duration || '30 يوم'}
+هدف الحملة: ${goalMap[inputs.objective] || inputs.objective || inputs.goal || 'زيادة المبيعات'}
+
+خطط حملة كاملة بمراحل وميزانية يومية وتوقعات وصول ونقرات وتحويلات وROAS وCPA.
+أضف خطة بديلة لو الأداء ضعيف وخطوات تالية واضحة.`;
+  }
+
+  return `${baseInputs}
 
 [المطلوب]
 أفكار حملات موجّهة مع زوايا (Angles) و CTA مناسب للهدف والمنصة.
 قدم أفكاراً عملية وسريعة التطبيق.`;
 }
 
-export async function validateAnalysisRequired(analysisId: number | undefined, userId?: string): Promise<{valid: boolean; error?: string; analysisId?: number}> {
+export async function validateAnalysisRequired(analysisId: number | undefined, userId?: string): Promise<{valid: boolean; error?: string; warning?: string; analysisId?: number}> {
   if (!analysisId) {
     return {
-      valid: false,
-      error: 'يجب تحليل الموقع أولاً قبل استخدام هذه الأداة. انتقل إلى "محلل الأعمال" لتحليل موقعك.',
+      valid: true,
+      warning: 'التحليل مفصّل أكثر مع تحليل الموقع، لكن يمكنك المتابعة',
     };
   }
 

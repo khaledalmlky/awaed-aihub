@@ -5,13 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { BarChart3, Sparkles, CheckCircle, AlertCircle, Lightbulb, AlertTriangle, Info } from 'lucide-react';
+import { BarChart3, Sparkles, CheckCircle, AlertCircle, Lightbulb, AlertTriangle, Info, Target, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/lib/auth-context';
 import { AnalysisLoading } from '@/components/ui/analysis-loading';
 import { AnalysisActionBar } from '@/components/ui/analysis-action-bar';
 import { adPlatforms } from '@/lib/marketing-options';
+import { ExecutiveSummary, IconList, ReportStatGrid, ToolModeTabs, NextStepsTimeline } from '@/components/ai/tool-report-widgets';
 
 interface AnalysisResult {
   rating: 'ضعيف' | 'متوسط' | 'قوي';
@@ -48,6 +48,7 @@ function detectPlatform(url: string): { name: string; icon: string } | null {
 
 export default function SmartAnalyzer() {
   const { user } = useAuth();
+  const [analysisMode, setAnalysisMode] = useState<'quick' | 'detailed'>('quick');
   const [accountUrl, setAccountUrl] = useState('');
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -145,8 +146,8 @@ export default function SmartAnalyzer() {
 
   return (
     <AppLayout>
-      <div className="space-y-10 lg:space-y-14">
-        <div className="flex items-center gap-5">
+      <div className="space-y-10 lg:space-y-14 text-right" dir="rtl">
+        <div className="flex flex-row-reverse items-center gap-5">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-xl">
             <BarChart3 className="w-8 h-8 text-white" strokeWidth={1.5} />
           </div>
@@ -155,8 +156,9 @@ export default function SmartAnalyzer() {
             <p className="text-muted-foreground text-lg mt-2">تحليل تقديري ذكي لحسابات التواصل الاجتماعي</p>
           </div>
         </div>
+        <ToolModeTabs value={analysisMode} onValueChange={setAnalysisMode} />
 
-        <div className="bg-[#1a2744]/10 dark:bg-[#1a2744]/30 border border-[#3B82F6]/20 rounded-xl p-4 flex items-center gap-3 text-right" dir="rtl">
+        <div className="bg-[#1a2744]/10 dark:bg-[#1a2744]/30 border border-[#3B82F6]/20 rounded-xl p-4 flex flex-row-reverse items-center gap-3 text-right" dir="rtl">
           <Info className="w-5 h-5 text-[#3B82F6] flex-shrink-0" />
           <p className="text-muted-foreground">
             هذا التحليل تقديري ذكي مبني على قراءة عامة للحساب، وليس تحليلاً رسمياً عبر واجهات برمجية (API).
@@ -202,7 +204,7 @@ export default function SmartAnalyzer() {
                 <Button
                   onClick={handleAnalyze}
                   disabled={isLoading || !accountUrl.trim()}
-                  className="btn-primary px-10 h-12 rounded-xl text-base mx-auto block"
+                  className="btn-primary px-10 h-12 rounded-xl text-base mx-auto flex flex-row-reverse items-center"
                   data-testid="button-analyze"
                 >
                   <Sparkles className="w-5 h-5 ml-2" />
@@ -217,9 +219,9 @@ export default function SmartAnalyzer() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400"
+            className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-right"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex flex-row-reverse items-center gap-2">
               <AlertTriangle className="w-5 h-5" />
               <p>{error}</p>
             </div>
@@ -240,11 +242,25 @@ export default function SmartAnalyzer() {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="space-y-5"
+                  className="space-y-5 text-right"
+                  dir="rtl"
                 >
+                  <ExecutiveSummary
+                    icon={BarChart3}
+                    title="ملخص تحليل القناة"
+                    summary={result.ratingReason || 'يوجد تقييم سريع لجاهزية الحساب الإعلانية بناءً على الرابط المدخل.'}
+                    badge={result.rating}
+                  />
+                  <ReportStatGrid
+                    items={[
+                      { icon: BarChart3, label: 'التقييم العام', value: result.rating, tone: result.rating === 'قوي' ? 'green' : result.rating === 'متوسط' ? 'amber' : 'red' },
+                      { icon: Info, label: 'المنصة', value: result.platform, tone: 'blue' },
+                      { icon: Lightbulb, label: 'الملاحظات', value: result.observations.length, tone: 'purple' },
+                    ]}
+                  />
                   <Card className="glass border-0" data-testid="card-rating">
                     <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-row-reverse items-center justify-between">
                         <div>
                           <p className="text-sm text-muted-foreground mb-1">التقييم العام</p>
                           <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border ${getRatingColor(result.rating)}`}>
@@ -252,7 +268,7 @@ export default function SmartAnalyzer() {
                             <span className="text-xl font-bold">{result.rating}</span>
                           </div>
                         </div>
-                        <div className="text-left">
+                        <div className="text-right">
                           <Badge variant="outline">{result.platform}</Badge>
                         </div>
                       </div>
@@ -262,26 +278,19 @@ export default function SmartAnalyzer() {
 
                   <Card className="glass border-0" data-testid="card-observations">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm flex items-center gap-2">
+                    <CardTitle className="text-sm flex flex-row-reverse items-center gap-2 text-right">
                         <Lightbulb className="w-4 h-4" style={{ color: 'var(--accent)' }} />
                         الملاحظات الرئيسية
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <ul className="space-y-3">
-                        {result.observations.map((item, i) => (
-                          <li key={i} className="text-sm flex items-start gap-2 p-2 rounded-lg bg-muted/30">
-                            <span className="mt-0.5" style={{ color: 'var(--accent)' }}>•</span>
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
+                      <IconList items={result.observations} type="positive" />
                     </CardContent>
                   </Card>
 
                   <Card className="glass border-0" data-testid="card-recommendation">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm flex items-center gap-2">
+                      <CardTitle className="text-sm flex flex-row-reverse items-center gap-2 text-right">
                         {result.recommendation.type.includes('مناسب') ? (
                           <CheckCircle className="w-4 h-4 text-emerald-400" />
                         ) : (
@@ -296,7 +305,7 @@ export default function SmartAnalyzer() {
                           ? 'bg-emerald-500/10 border-emerald-500/30' 
                           : 'bg-amber-500/10 border-amber-500/30'
                       }`}>
-                        <p className="font-semibold mb-1">{result.recommendation.type}</p>
+                        <p className="font-semibold mb-1 text-right">{result.recommendation.type}</p>
                         <p className="text-sm text-muted-foreground">{result.recommendation.text}</p>
                       </div>
                     </CardContent>
@@ -305,7 +314,7 @@ export default function SmartAnalyzer() {
                   {result.decisionReasoning && (
                     <Card className="glass border-0" data-testid="card-reasoning">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-sm flex items-center gap-2">
+                      <CardTitle className="text-sm flex flex-row-reverse items-center gap-2 text-right">
                           <Info className="w-4 h-4" style={{ color: 'var(--accent)' }} />
                           لماذا هذا القرار؟
                         </CardTitle>
@@ -317,9 +326,9 @@ export default function SmartAnalyzer() {
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground mb-1">الأدلة</p>
-                          <ul className="space-y-1">
+                          <ul className="space-y-1 pr-6">
                             {result.decisionReasoning.evidence.map((e, i) => (
-                              <li key={i} className="text-sm flex items-start gap-2">
+                              <li key={i} className="text-sm flex flex-row-reverse items-start gap-2">
                                 <span style={{ color: 'var(--accent)' }}>•</span>
                                 {e}
                               </li>
@@ -343,7 +352,8 @@ export default function SmartAnalyzer() {
                     }}
                   />
 
-                  <div className="bg-[#1a2744]/10 dark:bg-[#1a2744]/30 border border-[#3B82F6]/20 rounded-xl p-4 flex items-center gap-3">
+                  <NextStepsTimeline steps={[getSuggestedAction(), 'راجع أعلى 3 ملاحظات خلال 48 ساعة', 'قارن النتائج بعد 7 أيام']} />
+                  <div className="bg-[#1a2744]/10 dark:bg-[#1a2744]/30 border border-[#3B82F6]/20 rounded-xl p-4 flex flex-row-reverse items-center gap-3">
                     <Info className="w-5 h-5 text-[#3B82F6] flex-shrink-0" />
                     <p className="text-sm text-muted-foreground">
                       هذا التحليل تقديري وليس رسمياً. للحصول على قرار إعلاني نهائي، استخدم "محلل الأعمال" لتحليل الموقع أو المتجر.

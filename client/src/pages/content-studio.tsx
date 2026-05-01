@@ -8,9 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PenTool, Sparkles, Copy, Check, FileText, Loader2, AlertTriangle, AlertCircle, ArrowLeft, CheckCircle2, Clock, Hash, Trash2, Target } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/lib/auth-context';
 import { Link } from 'wouter';
 import {
   adPlatforms,
@@ -24,7 +26,9 @@ import {
   regions,
   socialSegments,
   tones,
+  optionLabel,
 } from '@/lib/marketing-options';
+import { ExecutiveSummary, NextStepsTimeline, ReportStatGrid, SectionCard, ToolModeTabs } from '@/components/ai/tool-report-widgets';
 
 interface ClientContext {
   businessName: string | null;
@@ -49,6 +53,18 @@ interface ContentResult {
   bestTime?: string;
   notes?: string;
   alternativeVersions?: { platform: string; content: string }[];
+  primaryContent?: {
+    content?: string;
+    headline?: string;
+    cta?: string;
+    hashtags?: string[];
+    bestPostTime?: string;
+    tone?: string;
+    wordCount?: number;
+  };
+  visualSuggestion?: string;
+  engagementTips?: string[];
+  performanceTips?: string[];
   confidenceLevel?: 'low' | 'medium';
   confidenceReason?: string;
   upgradeHint?: string;
@@ -79,7 +95,8 @@ const formatAnalysisLabel = (analysis: Analysis): string => {
 type Mode = 'select' | 'full' | 'guided';
 
 export default function ContentStudio() {
-  const [mode, setMode] = useState<Mode>('select');
+  useAuth();
+  const [mode, setMode] = useState<Mode>('guided');
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<number | null>(null);
   const [clientContext, setClientContext] = useState<ClientContext | null>(null);
@@ -172,7 +189,7 @@ export default function ContentStudio() {
           setClientContext(null);
         }
         if (newAnalyses.length === 0) {
-          setMode('select');
+          setMode('guided');
           setResult(null);
           setError(null);
         }
@@ -332,6 +349,14 @@ export default function ContentStudio() {
     </Badge>
   );
 
+  const generatedContent = result?.primaryContent?.content || result?.content || '';
+  const generatedHeadline = result?.primaryContent?.headline || 'محتوى جاهز للنشر';
+  const generatedPlatform = result?.platform || result?.alternativeVersions?.[0]?.platform || guidedContext?.platforms?.[0] || 'المنصة المقترحة';
+  const generatedBestTime = result?.primaryContent?.bestPostTime || result?.bestTime || '8-11 مساءً';
+  const generatedHashtags = result?.primaryContent?.hashtags || result?.hashtags || [];
+  const generatedCta = result?.primaryContent?.cta || 'ابدأ الآن';
+  const generatedTone = result?.primaryContent?.tone || tones.find((t) => t.value === tone)?.label || 'احترافي';
+
   if (isLoadingAnalyses) {
     return (
       <AppLayout>
@@ -382,125 +407,10 @@ export default function ContentStudio() {
     );
   }
 
-  if (mode === 'select') {
-    return (
-      <AppLayout>
-        <div className="space-y-10 lg:space-y-14">
-          <div className="flex items-center gap-5">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-xl">
-              <PenTool className="w-8 h-8 text-white" strokeWidth={1.5} />
-            </div>
-            <div>
-              <h1 className="text-3xl lg:text-4xl font-bold">استوديو المحتوى</h1>
-              <p className="text-muted-foreground text-lg mt-2">اختر طريقة كتابة المحتوى</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
-            <Card 
-              className="glass border-2 border-emerald-500/30 cursor-pointer hover:border-emerald-500/50 transition-all hover:shadow-xl"
-              onClick={() => {
-                if (analyses.length > 0) {
-                  setMode('full');
-                  setGuidedContext(null);
-                  setResult(null);
-                } else {
-                  setError('لا يوجد تحليلات سابقة. يرجى تحليل موقع أولاً في محلل الأعمال.');
-                }
-              }}
-            >
-              <CardHeader className="text-center pb-2">
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-500/20 flex items-center justify-center mb-4">
-                  <Target className="w-8 h-8 text-emerald-500" />
-                </div>
-                <CardTitle className="text-xl">تحليل كامل</CardTitle>
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 mx-auto">أعلى دقة</Badge>
-              </CardHeader>
-              <CardContent className="text-center space-y-3">
-                <p className="text-muted-foreground">
-                  محتوى مخصص مبني على تحليل شامل لنشاطك
-                </p>
-                <ul className="text-sm text-right space-y-1">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    <span>محتوى يعكس هوية نشاطك</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    <span>هاشتاقات مناسبة للمجال</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    <span>CTA مخصص لنوع النشاط</span>
-                  </li>
-                </ul>
-                {analyses.length === 0 && (
-                  <p className="text-xs text-amber-500">يتطلب تحليل موقع مسبق</p>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card 
-              className="glass border-2 border-border/30 cursor-pointer hover:border-accent/30 transition-all hover:shadow-xl"
-              onClick={() => { setMode('guided'); setClientContext(null); setResult(null); }}
-            >
-              <CardHeader className="text-center pb-2">
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-500/20 flex items-center justify-center mb-4">
-                  <FileText className="w-8 h-8 text-amber-500" />
-                </div>
-                <CardTitle className="text-xl">معطيات اختيارية</CardTitle>
-                <Badge variant="outline" className="mx-auto">بدون تحليل</Badge>
-              </CardHeader>
-              <CardContent className="text-center space-y-3">
-                <p className="text-muted-foreground">
-                  محتوى مبني على معلومات تدخلها يدوياً
-                </p>
-                <ul className="text-sm text-right space-y-1">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    <span>سريع بدون الحاجة لتحليل</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    <span>مناسب للعملاء الجدد</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-500" />
-                    <span>تخصيص يعتمد على المعطيات</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex items-center gap-3 max-w-4xl">
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-              <p className="text-red-400">{error}</p>
-              <Link href="/business-analyzer" className="mr-auto">
-                <Button size="sm" variant="outline" className="border-red-500/30 text-red-400 hover:bg-red-500/10">
-                  انتقل لمحلل الأعمال
-                </Button>
-              </Link>
-            </div>
-          )}
-        </div>
-      </AppLayout>
-    );
-  }
-
   return (
     <AppLayout>
-      <div className="space-y-10 lg:space-y-14">
-        <div className="flex items-center gap-5">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => { setMode('select'); setResult(null); setError(null); }}
-            className="rounded-full"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+      <div className="space-y-10 lg:space-y-14 text-right" dir="rtl">
+        <div className="flex flex-row-reverse items-center gap-5">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-xl">
             <PenTool className="w-8 h-8 text-white" strokeWidth={1.5} />
           </div>
@@ -511,6 +421,18 @@ export default function ContentStudio() {
             </p>
           </div>
         </div>
+
+        <ToolModeTabs
+          value={mode === 'guided' ? 'quick' : 'detailed'}
+          hasAnalyses={analyses.length > 0}
+          onValueChange={(value) => {
+            setMode(value === 'quick' ? 'guided' : 'full');
+            setResult(null);
+            setError(null);
+            if (value === 'quick') setClientContext(null);
+            if (value === 'detailed' && selectedAnalysisId) fetchContext(selectedAnalysisId);
+          }}
+        />
 
         {mode === 'guided' && !result && (
           <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 flex items-center gap-3">
@@ -819,11 +741,11 @@ export default function ContentStudio() {
             )}
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold">المحتوى المُنتج</h2>
-              {result?.content && (
+              {generatedContent && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleCopy(result.content)}
+                  onClick={() => handleCopy(generatedContent)}
                   className="text-muted-foreground hover:text-foreground"
                   data-testid="button-copy"
                 >
@@ -869,7 +791,24 @@ export default function ContentStudio() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="space-y-5"
+                    dir="rtl"
                   >
+                    <ExecutiveSummary
+                      icon={PenTool}
+                      title={generatedHeadline}
+                      summary={generatedContent.substring(0, 140) || 'تم إنشاء محتوى تسويقي عربي منظم وقابل للنشر.'}
+                      badge={mode === 'full' ? 'تحليل مفصل' : 'تحليل سريع'}
+                    />
+
+                    <ReportStatGrid
+                      items={[
+                        { icon: FileText, label: 'المنصة', value: generatedPlatform, tone: 'purple' },
+                        { icon: Clock, label: 'أفضل وقت', value: generatedBestTime, tone: 'blue' },
+                        { icon: Hash, label: 'الهاشتاقات', value: generatedHashtags.length || 0, tone: 'green' },
+                        { icon: Target, label: 'الدعوة', value: generatedCta, tone: 'amber' },
+                      ]}
+                    />
+
                     {mode === 'guided' && (
                       <div className="flex items-center justify-between">
                         <AnalysisBasisBadge type="guided" />
@@ -883,38 +822,40 @@ export default function ContentStudio() {
                       </div>
                     )}
 
+                    <SectionCard icon={FileText} title="المحتوى الرئيسي" tone="purple">
                     <div 
-                      className="p-4 rounded-lg bg-background/50 whitespace-pre-wrap text-sm leading-relaxed"
+                      className="p-4 rounded-lg bg-background/50 whitespace-pre-wrap text-sm leading-relaxed text-right"
                       data-testid="text-generated-content"
                     >
-                      {result.content}
+                      {generatedContent}
                     </div>
+                    </SectionCard>
 
-                    {(result.hashtags || result.bestTime || result.platform) && (
+                    {(generatedHashtags.length > 0 || generatedBestTime || generatedPlatform) && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {result.platform && (
-                          <div className="p-3 rounded-lg bg-card/50 flex items-center gap-2">
+                        {generatedPlatform && (
+                          <div className="p-3 rounded-lg bg-card/50 flex flex-row-reverse items-center gap-2 text-right">
                             <FileText className="w-4 h-4 text-pink-400" />
-                            <span className="text-sm">المنصة: {result.platform}</span>
+                            <span className="text-sm">المنصة: {generatedPlatform}</span>
                           </div>
                         )}
-                        {result.bestTime && (
-                          <div className="p-3 rounded-lg bg-card/50 flex items-center gap-2">
+                        {generatedBestTime && (
+                          <div className="p-3 rounded-lg bg-card/50 flex flex-row-reverse items-center gap-2 text-right">
                             <Clock className="w-4 h-4 text-blue-400" />
-                            <span className="text-sm">أفضل وقت: {result.bestTime}</span>
+                            <span className="text-sm">أفضل وقت: {generatedBestTime}</span>
                           </div>
                         )}
                       </div>
                     )}
 
-                    {result.hashtags && result.hashtags.length > 0 && (
-                      <div className="p-3 rounded-lg bg-card/50">
-                        <div className="flex items-center gap-2 mb-2">
+                    {generatedHashtags.length > 0 && (
+                      <div className="p-3 rounded-lg bg-card/50 text-right" dir="rtl">
+                        <div className="flex flex-row-reverse items-center gap-2 mb-2">
                           <Hash className="w-4 h-4 text-emerald-400" />
                           <span className="text-sm font-medium">هاشتاقات مقترحة</span>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          {result.hashtags.map((tag, i) => (
+                        <div className="flex flex-row-reverse flex-wrap gap-2">
+                          {generatedHashtags.map((tag, i) => (
                             <Badge 
                               key={i} 
                               variant="outline" 
@@ -929,17 +870,25 @@ export default function ContentStudio() {
                     )}
 
                     {result.notes && (
-                      <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                      <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-right">
                         <p className="text-sm text-amber-200/80">💡 {result.notes}</p>
                       </div>
                     )}
 
+                    {result.visualSuggestion && (
+                      <SectionCard icon={Sparkles} title="الاقتراح البصري" tone="blue">
+                        <p className="text-sm leading-7 text-muted-foreground">{result.visualSuggestion}</p>
+                      </SectionCard>
+                    )}
+
+                    <NextStepsTimeline steps={result.performanceTips || result.engagementTips} onCopy={() => handleCopy(generatedContent)} />
+
                     {result.alternativeVersions && result.alternativeVersions.length > 0 && (
-                      <div className="space-y-3">
+                      <div className="space-y-3 text-right" dir="rtl">
                         <p className="text-sm font-medium text-muted-foreground">نسخ بديلة:</p>
                         {result.alternativeVersions.map((alt, i) => (
                           <div key={i} className="p-3 rounded-lg bg-card/30 space-y-2">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-row-reverse items-center justify-between">
                               <Badge variant="outline">{alt.platform}</Badge>
                               <Button
                                 variant="ghost"
