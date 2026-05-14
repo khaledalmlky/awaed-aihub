@@ -801,7 +801,7 @@ export default function PerformanceAnalyzer() {
                             <CheckCircle2 className="w-4 h-4" />
                             الأدلة الداعمة
                           </div>
-                          <IconList items={result.decisionReasoning.evidence} type="success" />
+                          <IconList items={result.decisionReasoning.evidence} type="positive" />
                         </div>
                       )}
 

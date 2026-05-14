@@ -20,7 +20,11 @@ export async function generateImageBuffer(
     prompt,
     size,
   });
-  const base64 = response.data[0]?.b64_json ?? "";
+  const base64 = response.data?.[0]?.b64_json;
+  if (!base64) {
+    throw new Error("Image generation response did not include base64 data");
+  }
+
   return Buffer.from(base64, "base64");
 }
 
@@ -47,7 +51,11 @@ export async function editImages(
     prompt,
   });
 
-  const imageBase64 = response.data[0]?.b64_json ?? "";
+  const imageBase64 = response.data?.[0]?.b64_json;
+  if (!imageBase64) {
+    throw new Error("Image edit response did not include base64 data");
+  }
+
   const imageBytes = Buffer.from(imageBase64, "base64");
 
   if (outputPath) {

@@ -665,7 +665,7 @@ export async function processWithBrain(request: BrainRequest): Promise<BrainResp
       
       console.log(`[AI Brain] Processing guided mode - confidence: ${confidenceHint}`);
     } else {
-      context = await getClientContext(request.analysisId, request.userId);
+      context = await getClientContext(request.analysisId!, request.userId);
       if (!context) {
         return {
           success: false,
