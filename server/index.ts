@@ -10,6 +10,7 @@ import { registerAnalyzerRoutes } from "./ai/analyzer-routes";
 import { registerPerformanceRoutes } from "./ai/performance-routes";
 import { registerKnowledgeRoutes } from "./ai/knowledge-routes";
 import brainRoutes from "./ai/brain-routes";
+import nonprofitStudioRoutes from "./routes/nonprofit-studio";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,6 +29,10 @@ app.set("trust proxy", 1);
 // Sessions + auto admin bootstrap (uses ADMIN_EMAIL / ADMIN_PASSWORD env vars)
 setupSession(app);
 
+const uploadRoot = path.resolve(process.cwd(), "uploads");
+fs.mkdirSync(path.join(uploadRoot, "nonprofit"), { recursive: true });
+app.use("/uploads", express.static(uploadRoot));
+
 // -------- API Routes --------
 // Health check
 app.get("/api/health", (_req, res) => {
@@ -45,6 +50,9 @@ registerKnowledgeRoutes(app);
 
 // Campaign Brain
 app.use("/api/brain", brainRoutes);
+
+// Nonprofit Design Studio
+app.use("/api/nonprofit-studio", nonprofitStudioRoutes);
 
 // -------- Start server --------
 async function start() {

@@ -73,6 +73,7 @@ export const ALL_TOOLS = [
   "content_studio",
   "campaign_planner",
   "performance_analyzer",
+  "nonprofit_studio",
 ] as const;
 
 export type ToolId = typeof ALL_TOOLS[number];
@@ -84,6 +85,7 @@ export const TOOL_LABELS: Record<ToolId, string> = {
   content_studio: "استوديو المحتوى",
   campaign_planner: "مخطط الحملات",
   performance_analyzer: "محلل أداء الحملات",
+  nonprofit_studio: "استوديو تصاميم الجمعيات",
 };
 
 export const knowledgeBase = pgTable("knowledge_base", {
@@ -221,3 +223,27 @@ export const insertCampaignPerformanceSchema = createInsertSchema(campaignPerfor
 
 export type InsertCampaignPerformance = z.infer<typeof insertCampaignPerformanceSchema>;
 export type CampaignPerformance = typeof campaignPerformanceAnalyses.$inferSelect;
+
+export const nonprofitDesigns = pgTable("nonprofit_designs", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  type: text("type").notNull(), // "store_post" | "store_banner" | "marketing_post"
+  projectName: text("project_name").notNull(), // مثل: "كفالة اليتيم"
+  highlightWord: text("highlight_word").notNull(), // مثل: "اليتيم"
+  logoUrl: text("logo_url"), // مسار الشعار المحفوظ
+  primaryColor: text("primary_color"), // مثل: #1B5E3F
+  secondaryColor: text("secondary_color"),
+  imageUrl: text("image_url"), // الصورة النهائية المولّدة
+  backgroundUrl: text("background_url"), // خلفية AI قبل المعالجة
+  status: text("status").default("pending"), // pending | generating | completed | failed
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertNonprofitDesignSchema = createInsertSchema(nonprofitDesigns).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertNonprofitDesign = z.infer<typeof insertNonprofitDesignSchema>;
+export type NonprofitDesign = typeof nonprofitDesigns.$inferSelect;
