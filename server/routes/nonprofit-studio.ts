@@ -5,7 +5,7 @@ import path from "node:path";
 import multer from "multer";
 import OpenAI from "openai";
 import sharp from "sharp";
-import Vibrant from "node-vibrant";
+import { Vibrant } from "node-vibrant/node";
 import { z } from "zod";
 
 import { requireAuth } from "../auth-routes";
@@ -252,7 +252,11 @@ router.post("/upload-logo", upload.single("logo"), async (req: Request, res: Res
       return res.status(400).json({ error: "يرجى رفع ملف الشعار" });
     }
 
-    const palette = await Vibrant.from(req.file.path).getPalette();
+    const paletteSource = await sharp(req.file.path)
+      .resize({ width: 256, height: 256, fit: "inside", withoutEnlargement: true })
+      .png()
+      .toBuffer();
+    const palette = await Vibrant.from(paletteSource).getPalette();
     const primaryColor = normalizeHexColor(
       palette.Vibrant?.hex || palette.DarkVibrant?.hex,
       "#1B5E3F"
