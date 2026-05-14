@@ -73,6 +73,7 @@ export const ALL_TOOLS = [
   "content_studio",
   "campaign_planner",
   "performance_analyzer",
+  "roas_calculator",
 ] as const;
 
 export type ToolId = typeof ALL_TOOLS[number];
@@ -84,6 +85,7 @@ export const TOOL_LABELS: Record<ToolId, string> = {
   content_studio: "استوديو المحتوى",
   campaign_planner: "مخطط الحملات",
   performance_analyzer: "محلل أداء الحملات",
+  roas_calculator: "حاسبة العائد الإعلاني",
 };
 
 export const knowledgeBase = pgTable("knowledge_base", {
@@ -176,7 +178,7 @@ export type ChannelAnalysis = typeof channelAnalyses.$inferSelect;
 export const learningLogs = pgTable("learning_logs", {
   id: serial("id").primaryKey(),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
-  tool: text("tool").notNull(), // business_analyzer, smart_analyzer, campaign_brain, content_studio
+  tool: text("tool").notNull(), // business_analyzer, smart_analyzer, campaign_brain, content_studio, roas_calculator
   industryType: text("industry_type"), // نوع النشاط
   goal: text("goal"), // الهدف
   channel: text("channel"), // القناة/المنصة

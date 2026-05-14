@@ -7,6 +7,7 @@ import {
   PenTool,
   BarChart3,
   Calendar,
+  Calculator,
   BookOpen,
   TrendingUp,
   Users,
@@ -29,6 +30,7 @@ const tools = [
     color: 'from-emerald-500 to-teal-500',
     badge: 'ابدأ من هنا',
     isMain: true,
+    toolId: 'business_analyzer',
   },
   {
     title: 'Campaign Inspirator',
@@ -38,6 +40,7 @@ const tools = [
     href: '/campaign-brain',
     color: 'from-amber-500 to-orange-500',
     badge: 'أفكار إبداعية',
+    toolId: 'campaign_brain',
   },
   {
     title: 'Content Studio',
@@ -47,6 +50,7 @@ const tools = [
     href: '/content-studio',
     color: 'from-pink-500 to-rose-500',
     badge: 'محتوى تسويقي',
+    toolId: 'content_studio',
   },
   {
     title: 'Channel Analyzer',
@@ -56,6 +60,7 @@ const tools = [
     href: '/smart-analyzer',
     color: 'from-violet-500 to-purple-500',
     badge: 'تحليل القنوات',
+    toolId: 'smart_analyzer',
   },
   {
     title: 'Campaign Planner',
@@ -65,6 +70,7 @@ const tools = [
     href: '/campaign-planner',
     color: 'from-blue-500 to-cyan-500',
     badge: 'تخطيط',
+    toolId: 'campaign_planner',
   },
   {
     title: 'Performance Analyzer',
@@ -74,6 +80,17 @@ const tools = [
     href: '/performance-analyzer',
     color: 'from-sky-400 to-indigo-500',
     badge: 'جديد',
+    toolId: 'performance_analyzer',
+  },
+  {
+    title: 'ROAS Calculator',
+    titleAr: 'حاسبة العائد الإعلاني',
+    description: 'حساب ROAS و CPA ونقطة التعادل للحملات',
+    icon: Calculator,
+    href: '/roas-calculator',
+    color: 'from-green-500 to-emerald-600',
+    badge: 'قرار سريع',
+    toolId: 'roas_calculator',
   },
 ];
 
@@ -92,7 +109,7 @@ const item = {
 };
 
 export default function Dashboard() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, canAccessTool } = useAuth();
 
   const { data: dashboardStats, isLoading: statsLoading } = useQuery<{
     totalUsers: number;
@@ -112,7 +129,7 @@ export default function Dashboard() {
     { label: 'طلبات الذكاء الاصطناعي', value: String(dashboardStats.totalAIRequests), icon: Zap },
   ] : [];
 
-  const filteredTools = tools;
+  const filteredTools = tools.filter((tool) => canAccessTool(tool.toolId));
 
   return (
     <AppLayout>
