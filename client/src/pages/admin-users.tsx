@@ -33,6 +33,7 @@ const ALL_TOOLS = [
   { id: 'content_studio', name: 'استوديو المحتوى' },
   { id: 'campaign_planner', name: 'مخطط الحملات' },
   { id: 'performance_analyzer', name: 'محلل أداء الحملات' },
+  { id: 'roas_calculator', name: 'حاسبة العائد الإعلاني' },
 ];
 
 export default function AdminUsers() {

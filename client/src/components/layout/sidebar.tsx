@@ -7,6 +7,7 @@ import {
   Lightbulb,
   PenTool,
   BarChart3,
+  Calculator,
   Calendar,
   LogOut,
   Home,
@@ -25,6 +26,7 @@ const navigation = [
   { name: 'مُلهم الحملات', href: '/campaign-brain', icon: Lightbulb, toolId: 'campaign_brain' },
   { name: 'استوديو المحتوى', href: '/content-studio', icon: PenTool, toolId: 'content_studio' },
   { name: 'مخطط الحملات', href: '/campaign-planner', icon: Calendar, toolId: 'campaign_planner' },
+  { name: 'حاسبة العائد الإعلاني', href: '/roas-calculator', icon: Calculator, toolId: 'roas_calculator' },
 ];
 
 const adminNavigation = [
