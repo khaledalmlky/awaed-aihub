@@ -841,7 +841,7 @@ export default function CampaignPlanner() {
                             <CheckCircle2 className="w-4 h-4" />
                             توصيات
                           </div>
-                          <IconList items={result.plan.recommendations} type="success" />
+                          <IconList items={result.plan.recommendations} type="positive" />
                         </div>
                       )}
                     </CardContent>

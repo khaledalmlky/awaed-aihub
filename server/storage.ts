@@ -2,6 +2,7 @@ import { eq, ilike, or, sql, desc, and, ne } from "drizzle-orm";
 import { db } from "./db";
 import {
   users,
+  passwordResetRequests,
   knowledgeBase,
   aiRequestLogs,
   businessAnalyses,
@@ -10,6 +11,7 @@ import {
   campaignPerformanceAnalyses,
   type User,
   type InsertUser,
+  type PasswordResetRequest,
   type Knowledge,
   type InsertKnowledge,
   type AIRequestLog,
@@ -33,6 +35,10 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   getActiveUsers(): Promise<User[]>;
   deleteUser(id: string): Promise<boolean>;
+  createPasswordResetRequest(email: string): Promise<PasswordResetRequest>;
+  getPendingPasswordResetRequests(): Promise<PasswordResetRequest[]>;
+  completePasswordResetRequestsByEmail(email: string): Promise<void>;
+  rejectPasswordResetRequest(id: string): Promise<PasswordResetRequest | undefined>;
   getAllKnowledge(): Promise<Knowledge[]>;
   getKnowledgeById(id: number): Promise<Knowledge | undefined>;
   getKnowledgeByCategory(category: string): Promise<Knowledge[]>;
@@ -114,6 +120,38 @@ export class DatabaseStorage implements IStorage {
   async deleteUser(id: string): Promise<boolean> {
     await db.delete(users).where(eq(users.id, id));
     return true;
+  }
+
+  async createPasswordResetRequest(email: string): Promise<PasswordResetRequest> {
+    const [request] = await db
+      .insert(passwordResetRequests)
+      .values({ email })
+      .returning();
+    return request;
+  }
+
+  async getPendingPasswordResetRequests(): Promise<PasswordResetRequest[]> {
+    return db
+      .select()
+      .from(passwordResetRequests)
+      .where(eq(passwordResetRequests.status, "pending"))
+      .orderBy(desc(passwordResetRequests.createdAt));
+  }
+
+  async completePasswordResetRequestsByEmail(email: string): Promise<void> {
+    await db
+      .update(passwordResetRequests)
+      .set({ status: "completed", completedAt: new Date() })
+      .where(and(eq(passwordResetRequests.email, email), eq(passwordResetRequests.status, "pending")));
+  }
+
+  async rejectPasswordResetRequest(id: string): Promise<PasswordResetRequest | undefined> {
+    const [request] = await db
+      .update(passwordResetRequests)
+      .set({ status: "rejected", completedAt: new Date() })
+      .where(eq(passwordResetRequests.id, id))
+      .returning();
+    return request;
   }
 
   async getAllKnowledge(): Promise<Knowledge[]> {
