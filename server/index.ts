@@ -10,6 +10,7 @@ import { registerAnalyzerRoutes } from "./ai/analyzer-routes";
 import { registerPerformanceRoutes } from "./ai/performance-routes";
 import { registerKnowledgeRoutes } from "./ai/knowledge-routes";
 import brainRoutes from "./ai/brain-routes";
+import nonprofitStudioRoutes from "./routes/nonprofit-studio";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,6 +22,7 @@ const isProduction = process.env.NODE_ENV === "production";
 // -------- Middleware --------
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 
 // Trust proxy (required for Railway/Render behind load balancers)
 app.set("trust proxy", 1);
@@ -45,6 +47,9 @@ registerKnowledgeRoutes(app);
 
 // Campaign Brain
 app.use("/api/brain", brainRoutes);
+
+// Nonprofit Design Studio
+app.use("/api/nonprofit-studio", nonprofitStudioRoutes);
 
 // -------- Start server --------
 async function start() {
