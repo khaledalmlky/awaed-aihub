@@ -18,6 +18,7 @@ import ContentStudio from "@/pages/content-studio";
 import SmartAnalyzer from "@/pages/smart-analyzer";
 import CampaignPlanner from "@/pages/campaign-planner";
 import PerformanceAnalyzer from "@/pages/performance-analyzer";
+import NonprofitStudio from "@/pages/nonprofit-studio";
 import AdminUsers from "@/pages/admin/users";
 import ProtectedAdminRoute from "@/lib/protected-admin-route";
 
@@ -45,6 +46,7 @@ function Router() {
       <Route path="/smart-analyzer" component={SmartAnalyzer} />
       <Route path="/campaign-planner" component={CampaignPlanner} />
       <Route path="/performance-analyzer" component={PerformanceAnalyzer} />
+              <Route path="/nonprofit-studio" component={NonprofitStudio} />
       <Route path="/admin/users">
         {() => (
           <ProtectedAdminRoute>
