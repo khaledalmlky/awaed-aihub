@@ -14,6 +14,7 @@ import {
   Zap,
   Globe,
   Loader2,
+    Palette,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AppLayout from '@/components/layout/app-layout';
@@ -74,6 +75,15 @@ const tools = [
     href: '/performance-analyzer',
     color: 'from-sky-400 to-indigo-500',
     badge: 'جديد',
+  },
+  {
+        title: 'Nonprofit Design Studio',
+        titleAr: 'استوديو تصاميم الجمعيات',
+        description: 'ولّد بوستات احترافية للجمعيات بالذكاء الاصطناعي',
+        icon: Palette,
+        href: '/nonprofit-studio',
+        color: 'from-purple-500 to-pink-500',
+        badge: 'جديد ✨',
   },
 ];
 
