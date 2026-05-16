@@ -221,3 +221,19 @@ export const insertCampaignPerformanceSchema = createInsertSchema(campaignPerfor
 
 export type InsertCampaignPerformance = z.infer<typeof insertCampaignPerformanceSchema>;
 export type CampaignPerformance = typeof campaignPerformanceAnalyses.$inferSelect;
+
+export const nonprofitDesigns = pgTable("nonprofit_designs", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  projectName: text("project_name").notNull(),
+  highlightWord: text("highlight_word").notNull(),
+  primaryColor: text("primary_color").notNull(),
+  visualContext: text("visual_context").notNull(),
+  imageUrl: text("image_url"),
+  status: text("status").default("pending"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type NonprofitDesign = typeof nonprofitDesigns.$inferSelect;
+export type InsertNonprofitDesign = typeof nonprofitDesigns.$inferInsert;
