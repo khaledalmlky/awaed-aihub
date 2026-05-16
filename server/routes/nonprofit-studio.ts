@@ -4,6 +4,7 @@ import path from "path";
 import OpenAI from "openai";
 import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
+import sharp from "sharp";
 
 import { requireAuth } from "../auth-routes";
 import { db } from "../db";
@@ -52,7 +53,7 @@ function safeDownloadName(projectName: string): string {
     .replace(/\s+/g, "-")
     .slice(0, 80);
 
-  return `${safeName || "nonprofit-design"}.png`;
+  return `${safeName || "nonprofit-design"}.jpg`;
 }
 
 router.use(requireAuth);
@@ -125,7 +126,7 @@ LANGUAGE: Arabic only.`;
       prompt: imagePrompt,
       n: 1,
       size: "1024x1024",
-      quality: "medium",
+      quality: "low",
     });
 
     const imageBase64 = response.data?.[0]?.b64_json;
@@ -135,9 +136,14 @@ LANGUAGE: Arabic only.`;
 
     await fs.mkdir(uploadDir, { recursive: true });
 
-    const fileName = `${designId}-${Date.now()}.png`;
+    const fileName = `${designId}-${Date.now()}.jpg`;
     const filePath = path.join(uploadDir, fileName);
-    const imageBuffer = Buffer.from(imageBase64, "base64");
+    const rawBuffer = Buffer.from(imageBase64, "base64");
+    // ضغط الصورة وتصغيرها باستخدام sharp لتقليل حجم الملف
+    const imageBuffer = await sharp(rawBuffer)
+      .resize(600, 600, { fit: "cover" })
+      .jpeg({ quality: 75 })
+      .toBuffer();
     await fs.writeFile(filePath, imageBuffer);
 
     const imageUrl = `/uploads/nonprofit/${fileName}`;
